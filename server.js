@@ -1,42 +1,60 @@
-// server.js
-const express = require("express");
-const { WebSocketServer } = require("ws");
+import express from "express";
+import { WebSocketServer } from "ws";
+import http from "http";
 
-const PORT = process.env.PORT || 10000;
 const app = express();
+app.use(express.json());
 
-// --- HTTP route so the Render URL shows something ---
-app.get("/", (req, res) => {
-  res.send("✅ GMS WebSocket server is running!");
+let messages = []; // store chat history in memory
+
+// REST endpoint: send a message
+app.post("/send", (req, res) => {
+  const { user, msg } = req.body;
+  if (!user || !msg) return res.status(400).json({ error: "Invalid payload" });
+
+  const payload = { user, msg };
+  messages.push(payload);
+
+  // also broadcast to WebSocket clients
+  wss.clients.forEach(client => {
+    if (client.readyState === 1) {
+      client.send(JSON.stringify(payload));
+    }
+  });
+
+  res.json({ status: "ok" });
 });
 
-// --- Start HTTP server ---
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Server listening on ${PORT}`);
+// REST endpoint: get messages
+app.get("/messages", (req, res) => {
+  res.json(messages);
 });
 
-// --- Attach WebSocket server ---
+// Setup HTTP + WS server
+const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
-wss.on("connection", (ws) => {
-  console.log("🌐 New WebSocket connection");
+wss.on("connection", ws => {
+  console.log("🔌 WebSocket client connected");
+  ws.on("message", msg => {
+    try {
+      const data = JSON.parse(msg);
+      if (data.user && data.msg) {
+        const payload = { user: data.user, msg: data.msg };
+        messages.push(payload);
 
-  // Send greeting when someone connects
-  ws.send("👋 Hello from GMS WebSocket server!");
-
-  // Handle incoming messages
-  ws.on("message", (message) => {
-    console.log("📩 Received:", message.toString());
-
-    // Broadcast to all connected clients
-    wss.clients.forEach((client) => {
-      if (client.readyState === ws.OPEN) {
-        client.send(message.toString());
+        // broadcast
+        wss.clients.forEach(client => {
+          if (client.readyState === 1) {
+            client.send(JSON.stringify(payload));
+          }
+        });
       }
-    });
-  });
-
-  ws.on("close", () => {
-    console.log("❌ WebSocket closed");
+    } catch (e) {
+      console.error("Bad WS message", e);
+    }
   });
 });
+
+const PORT = process.env.PORT || 10000;
+server.listen(PORT, () => console.log(`🚀 Server listening on ${PORT}`));
