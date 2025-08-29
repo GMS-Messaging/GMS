@@ -12,7 +12,19 @@ const server = app.listen(port, () => {
 // Attach WebSocket server
 const wss = new WebSocketServer({ server });
 
-// Broadcast helper
+// --- Keepalive heartbeat ---
+function heartbeat() {
+  this.isAlive = true;
+}
+setInterval(() => {
+  wss.clients.forEach((ws) => {
+    if (!ws.isAlive) return ws.terminate();
+    ws.isAlive = false;
+    ws.ping();
+  });
+}, 30000);
+
+// --- Broadcast helper ---
 function broadcast(data, sender) {
   wss.clients.forEach((client) => {
     if (client.readyState === 1 && client !== sender) {
@@ -21,7 +33,11 @@ function broadcast(data, sender) {
   });
 }
 
+// --- WebSocket connection handler ---
 wss.on("connection", (ws) => {
+  ws.isAlive = true;
+  ws.on("pong", heartbeat);
+
   console.log("✅ Client connected");
 
   ws.on("message", (msg) => {
@@ -30,9 +46,9 @@ wss.on("connection", (ws) => {
     try {
       const parsed = JSON.parse(msg.toString());
       if (parsed.user && parsed.msg) {
-        // Broadcast to all other clients
+        // Chat message → broadcast to everyone else
         broadcast(JSON.stringify(parsed), ws);
-        // Echo back to sender
+        // Echo back to sender too
         ws.send(JSON.stringify(parsed));
       } else {
         ws.send(`Echo: ${msg}`);
@@ -47,7 +63,7 @@ wss.on("connection", (ws) => {
   });
 });
 
-// Health check route
+// --- Health check route ---
 app.get("/", (req, res) => {
   res.send("WebSocket server is running 🚀");
 });
