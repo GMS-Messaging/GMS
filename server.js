@@ -24,7 +24,13 @@ wss.on("connection", (ws) => {
   ws.on("message", (data) => {
     try {
       const msg = JSON.parse(data.toString());
-      console.log("📩", msg);
+
+      // Log message
+      if (msg.user && msg.msg) {
+        console.log(`💬 [${msg.user}]: ${msg.msg}`);
+      } else {
+        console.log("📩 Raw:", msg);
+      }
 
       // Save message
       messages.push(msg);
@@ -60,6 +66,10 @@ app.post("/send", (req, res) => {
   }
 
   const newMsg = { user, msg };
+
+  // Log message
+  console.log(`💬 [${user}]: ${msg}`);
+
   messages.push(newMsg);
 
   // Broadcast to WS clients too
@@ -70,6 +80,22 @@ app.post("/send", (req, res) => {
   });
 
   res.json({ success: true });
+});
+
+// Clear all messages
+app.post("/clear", (req, res) => {
+  messages = [];
+  console.log("🧹 Chat history cleared!");
+
+  // Broadcast system message to all WS clients
+  const clearMsg = { system: true, msg: "🧹 Chat history has been cleared." };
+  wss.clients.forEach((client) => {
+    if (client.readyState === 1) {
+      client.send(JSON.stringify(clearMsg));
+    }
+  });
+
+  res.json({ success: true, msg: "Chat history cleared" });
 });
 
 // ---- Start server ----
