@@ -1,57 +1,59 @@
-import express from "express";
-import { WebSocketServer } from "ws";
-import http from "http";
+const express = require("express");
+const http = require("http");
+const WebSocket = require("ws");
+const bodyParser = require("body-parser");
 
 const app = express();
-app.use(express.json());
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
 
-let messages = []; // store chat history in memory
+let messages = []; // store chat messages
 
-// REST endpoint: send a message
-app.post("/send", (req, res) => {
-  const { user, msg } = req.body;
-  if (!user || !msg) return res.status(400).json({ error: "Invalid payload" });
+// Middleware
+app.use(bodyParser.json());
 
-  const payload = { user, msg };
-  messages.push(payload);
-
-  // also broadcast to WebSocket clients
-  wss.clients.forEach(client => {
-    if (client.readyState === 1) {
-      client.send(JSON.stringify(payload));
-    }
-  });
-
-  res.json({ status: "ok" });
-});
-
-// REST endpoint: get messages
+// REST endpoint: get all messages
 app.get("/messages", (req, res) => {
   res.json(messages);
 });
 
-// Setup HTTP + WS server
-const server = http.createServer(app);
-const wss = new WebSocketServer({ server });
+// REST endpoint: send a message
+app.post("/send", (req, res) => {
+  const { user, msg } = req.body;
+  if (!user || !msg) {
+    return res.status(400).json({ error: "Missing user or msg" });
+  }
 
-wss.on("connection", ws => {
-  console.log("🔌 WebSocket client connected");
-  ws.on("message", msg => {
+  const newMsg = { user, msg };
+  messages.push(newMsg);
+
+  // also broadcast to WS clients
+  wss.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(newMsg));
+    }
+  });
+
+  res.json({ success: true });
+});
+
+// WebSocket handling
+wss.on("connection", (ws) => {
+  console.log("⚡ New WebSocket connection");
+
+  ws.on("message", (msg) => {
     try {
-      const data = JSON.parse(msg);
-      if (data.user && data.msg) {
-        const payload = { user: data.user, msg: data.msg };
-        messages.push(payload);
+      const parsed = JSON.parse(msg);
+      messages.push(parsed);
 
-        // broadcast
-        wss.clients.forEach(client => {
-          if (client.readyState === 1) {
-            client.send(JSON.stringify(payload));
-          }
-        });
-      }
-    } catch (e) {
-      console.error("Bad WS message", e);
+      // broadcast
+      wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify(parsed));
+        }
+      });
+    } catch (err) {
+      console.error("Invalid message:", msg);
     }
   });
 });
