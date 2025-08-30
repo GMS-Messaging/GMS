@@ -3,6 +3,7 @@ const express = require("express");
 const { WebSocketServer } = require("ws");
 const http = require("http");
 const cors = require("cors");
+const cron = require("node-cron"); // scheduled tasks
 
 const app = express();
 const server = http.createServer(app);
@@ -17,7 +18,7 @@ let messages = []; // Store chat history
 wss.on("connection", (ws) => {
   console.log("🔌 Client connected");
 
-  // Send recent history on connect
+  // Send welcome & recent history
   ws.send(JSON.stringify({ system: true, msg: "✅ Connected to GMS WebSocket" }));
   messages.forEach((m) => ws.send(JSON.stringify(m)));
 
@@ -25,81 +26,67 @@ wss.on("connection", (ws) => {
     try {
       const msg = JSON.parse(data.toString());
 
-      // Log message
-      if (msg.user && msg.msg) {
-        console.log(`💬 [${msg.user}]: ${msg.msg}`);
-      } else {
-        console.log("📩 Raw:", msg);
-      }
+      if (msg.user && msg.msg) console.log(`💬 [${msg.user}]: ${msg.msg}`);
+      else console.log("📩 Raw:", msg);
 
-      // Save message
       messages.push(msg);
 
       // Broadcast to all clients
       wss.clients.forEach((client) => {
-        if (client.readyState === ws.OPEN) {
-          client.send(JSON.stringify(msg));
-        }
+        if (client.readyState === ws.OPEN) client.send(JSON.stringify(msg));
       });
     } catch (err) {
       console.error("❌ Invalid message:", err);
     }
   });
 
-  ws.on("close", () => {
-    console.log("🚪 Client disconnected");
-  });
+  ws.on("close", () => console.log("🚪 Client disconnected"));
 });
 
-// ---- REST fallback endpoints ----
+// ---- REST endpoints ----
+app.get("/messages", (req, res) => res.json(messages));
 
-// Get all messages
-app.get("/messages", (req, res) => {
-  res.json(messages);
-});
-
-// Post a new message
 app.post("/send", (req, res) => {
   const { user, msg } = req.body;
-  if (!user || !msg) {
-    return res.status(400).json({ error: "Missing user or msg" });
-  }
+  if (!user || !msg) return res.status(400).json({ error: "Missing user or msg" });
 
   const newMsg = { user, msg };
-
-  // Log message
   console.log(`💬 [${user}]: ${msg}`);
-
   messages.push(newMsg);
 
-  // Broadcast to WS clients too
   wss.clients.forEach((client) => {
-    if (client.readyState === 1) {
-      client.send(JSON.stringify(newMsg));
-    }
+    if (client.readyState === 1) client.send(JSON.stringify(newMsg));
   });
 
   res.json({ success: true });
 });
 
-// Clear all messages
 app.post("/clear", (req, res) => {
   messages = [];
   console.log("🧹 Chat history cleared!");
 
-  // Broadcast system message to all WS clients
   const clearMsg = { system: true, msg: "🧹 Chat history has been cleared." };
   wss.clients.forEach((client) => {
-    if (client.readyState === 1) {
-      client.send(JSON.stringify(clearMsg));
-    }
+    if (client.readyState === 1) client.send(JSON.stringify(clearMsg));
   });
 
   res.json({ success: true, msg: "Chat history cleared" });
 });
 
+// ---- Cron job: clear chat every day at 00:00 EST/EDT ----
+cron.schedule('0 0 * * *', () => {
+  messages = [];
+  console.log("🧹 Chat history automatically cleared at 00:00 EST/EDT!");
+
+  const clearMsg = { system: true, msg: "🧹 Chat history automatically cleared (00:00 EST/EDT)." };
+  wss.clients.forEach(client => {
+    if (client.readyState === 1) client.send(JSON.stringify(clearMsg));
+  });
+}, {
+  scheduled: true,
+  timezone: "America/New_York"
+});
+
 // ---- Start server ----
 const PORT = process.env.PORT || 10000;
-server.listen(PORT, () => {
-  console.log(`🚀 Server listening on ${PORT}`);
-});
+server.listen(PORT, () => console.log(`🚀 Server listening on ${PORT}`));
