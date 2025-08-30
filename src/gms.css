@@ -1,140 +1,94 @@
+/* Import Lexend from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;700&display=swap');
+
 /* General reset */
 * {
-margin: 0;
-padding: 0;
-box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-/* Set the background to black, text color to white, and font styling similar to CROSH */
+/* Body styling */
 body {
-background-color: rgb(0, 0, 0);
-color: rgb(255, 255, 255);
-font-family: 'Courier New', monospace;
-font-size: 18px;
-line-height: 1.6;
-overflow: hidden;
-height: 100vh;
-display: flex;
-flex-direction: column;
-justify-content: flex-start;
+  background-color: black;
+  color: white;
+  font-family: 'Lexend', monospace;
+  font-size: 18px;
+  line-height: 1.6;
+  overflow: hidden;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Console output container (makes sure the text is readable and scrolls) */
+/* Console output container */
 #console-output {
-overflow-y: auto;
-flex-grow: 1;
-width: 100%;
-padding: 10px;
-white-space: pre-wrap;
-word-wrap: break-word;
-font-size: 18px;
-line-height: 1.6;
+  overflow-y: auto;
+  flex-grow: 1;
+  width: 100%;
+  padding: 10px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: 'Lexend', monospace;
 }
 
-/* Prompt styling for the prompt to appear like the one in CROSH */
+/* Prompt styling */
 #prompt {
-display: flex;
-align-items: center;
-padding: 5px 10px;
-width: 100%;
-color: #00ff00;
-/* Green prompt text */
-font-size: 18px;
+  display: flex;
+  align-items: center;
+  padding: 5px 10px;
+  width: 100%;
+  color: #00ff00;
+  font-family: 'Lexend', monospace;
 }
 
-/* Input text (where user types) */
+/* Input text */
 .input-text {
-color: white;
-font-family: 'Courier New', monospace;
+  color: white;
+  font-family: 'Lexend', monospace;
 }
 
-/* Blinking caret to resemble CROSH style */
-#blinking-caret {
-color: #00ff00;
-animation: blink 1s step-end infinite;
-font-weight: bold;
+/* Blinking caret */
+#caret {
+  color: #00ff00;
+  animation: blink 1s step-end infinite;
+  font-weight: bold;
 }
 
 @keyframes blink {
-50% {
-opacity: 0;
+  50% { opacity: 0; }
 }
-}
-
 
 /* Command output colors */
-.command-output {
-color: white;
+.command-output { color: white; }
+.error-output { color: red; }
+.help-output { color: #00FFFF; }
+.misc-output { color: #9e9e9e; opacity: 75%; }
+.misc-urgent-output { color: #ff5959; opacity: 75%; }
+
+/* Themes */
+.theme-default { background-color: black; color: #00FF00; }
+.theme-light { background-color: #F0F0F0; color: black; }
+.theme-blue { background-color: #1F1F1F; color: #1E90FF; }
+.theme-red { background-color: #1F1F1F; color: #FF4500; }
+.theme-purple { background-color: #1F1F1F; color: #800080; }
+.theme-green { background-color: #003300; color: #00FF00; }
+
+/* Inputs/buttons */
+input, button, textarea {
+  background-color: black;
+  color: white;
+  border: 1px solid #00FF00;
+  outline: none;
+  font-family: 'Lexend', monospace;
 }
 
-.error-output {
-color: red;
+input:focus, button:focus, textarea:focus {
+  border-color: #00FF00;
 }
 
-.help-output {
-color: #00FFFF;
-}
-
-.misc-output {
-color: #9e9e9e;
-opacity: 75%;
-}
-.misc-urgent-output{
-color: #ff5959;
-opacity: 75%;
-}
-
-/* Theming options */
-.theme-default {
-background-color: black;
-color: #00FF00;
-}
-
-.theme-light {
-background-color: #F0F0F0;
-color: black;
-}
-
-.theme-blue {
-background-color: #1F1F1F;
-color: #1E90FF;
-}
-
-.theme-red {
-background-color: #1F1F1F;
-color: #FF4500;
-}
-
-.theme-purple {
-background-color: #1F1F1F;
-color: #800080;
-}
-
-.theme-green {
-background-color: #003300;
-color: #00FF00;
-}
-
-/* Ensuring any input elements appear as expected */
-input,
-button,
-textarea {
-background-color: black;
-color: white;
-border: 1px solid #00FF00;
-outline: none;
-font-family: 'Courier New', monospace;
-}
-
-input:focus,
-button:focus,
-textarea:focus {
-border-color: #00FF00;
-}
-
-/* Text selection (to make it fit the theme) */
+/* Text selection */
 ::selection {
-background-color: #00FF00;
-color: black;
-
+  background-color: #00FF00;
+  color: black;
 }
