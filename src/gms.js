@@ -3,7 +3,7 @@ let consoleOutput = document.getElementById("console-output");
 let inputText = document.getElementById("input-text");
 
 let currentInput = "";
-let cursorIndex = 0; // caret position
+let cursorIndex = 0;
 let commandHistory = [];
 let historyIndex = -1;
 
@@ -19,33 +19,28 @@ let gashNickname = "anon";
 let gashAutoSay = true;
 
 // DOMPurify helper
-function safeHTML(str) { return DOMPurify.sanitize(str); }
+function safeHTML(str){ return DOMPurify.sanitize(str); }
+
+// Join presets
+const joinPresets = { gms: "wss://gms-1-0.onrender.com" };
 
 // Input handling
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Backspace") {
-    if (cursorIndex > 0) {
-      currentInput = currentInput.slice(0,cursorIndex-1)+currentInput.slice(cursorIndex);
-      cursorIndex--;
-    }
-  } else if (event.key === "Delete") {
-    if (cursorIndex < currentInput.length) currentInput = currentInput.slice(0,cursorIndex)+currentInput.slice(cursorIndex+1);
-  } else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey) {
-    currentInput = currentInput.slice(0,cursorIndex)+event.key+currentInput.slice(cursorIndex);
-    cursorIndex++;
-  } else if (event.key === "ArrowLeft") { if(cursorIndex>0)cursorIndex--; }
-  else if (event.key === "ArrowRight") { if(cursorIndex<currentInput.length)cursorIndex++; }
-  else if (event.key === "ArrowUp" && historyIndex>0) { historyIndex--; currentInput=commandHistory[historyIndex]; cursorIndex=currentInput.length; }
-  else if (event.key === "ArrowDown") { if(historyIndex<commandHistory.length-1){historyIndex++; currentInput=commandHistory[historyIndex];} else {historyIndex=commandHistory.length; currentInput="";} cursorIndex=currentInput.length; }
+  if(event.key==="Backspace"){ if(cursorIndex>0){ currentInput=currentInput.slice(0,cursorIndex-1)+currentInput.slice(cursorIndex); cursorIndex--; } }
+  else if(event.key==="Delete"){ if(cursorIndex<currentInput.length) currentInput=currentInput.slice(0,cursorIndex)+currentInput.slice(cursorIndex+1); }
+  else if(event.key.length===1 && !event.ctrlKey && !event.metaKey){ currentInput=currentInput.slice(0,cursorIndex)+event.key+currentInput.slice(cursorIndex); cursorIndex++; }
+  else if(event.key==="ArrowLeft"){ if(cursorIndex>0)cursorIndex--; }
+  else if(event.key==="ArrowRight"){ if(cursorIndex<currentInput.length)cursorIndex++; }
+  else if(event.key==="ArrowUp"){ if(historyIndex>0){historyIndex--; currentInput=commandHistory[historyIndex]; cursorIndex=currentInput.length;} }
+  else if(event.key==="ArrowDown"){ if(historyIndex<commandHistory.length-1){historyIndex++; currentInput=commandHistory[historyIndex];} else{historyIndex=commandHistory.length; currentInput="";} cursorIndex=currentInput.length; }
 
   renderInput();
 
-  if (event.key === "Enter") {
-    const trimmed = currentInput.trim();
+  if(event.key==="Enter"){
+    const trimmed=currentInput.trim();
     if(!trimmed){ currentInput=""; cursorIndex=0; renderInput(); return; }
-
     commandHistory.push(trimmed);
-    historyIndex = commandHistory.length;
+    historyIndex=commandHistory.length;
 
     if(gashAutoSay && !trimmed.startsWith("say") && !trimmed.startsWith("int") && !trimmed.startsWith("join")){
       processCommand("say "+trimmed);
@@ -58,7 +53,7 @@ document.addEventListener("keydown", (event) => {
 function renderInput(){
   const before=currentInput.slice(0,cursorIndex);
   const after=currentInput.slice(cursorIndex);
-  inputText.innerHTML = safeHTML(before)+`<span id="caret">█</span>`+safeHTML(after);
+  inputText.innerHTML=safeHTML(before)+`<span id="caret">█</span>`+safeHTML(after);
 }
 
 // REST helpers
@@ -88,61 +83,77 @@ function startRESTPolling(){
 function processCommand(command){
   const parts=command.split(" ");
 
-  if(command==="gms join"){ processCommand("join wss://gms-1-0.onrender.com"); return; }
+  // ---- JOIN PRESETS ----
+  if(parts[0]==="join"){
+    const target=parts[1];
+    if(!target) return addToConsole("> Error: Missing server/preset name");
+    const url = joinPresets[target] || target;
+    processCommand(`int ws connect ${url}`);
+    return;
+  }
 
-  if(parts[0]==="join"){ const url=parts[1]; if(!url)return addToConsole("> Error: Missing URL"); processCommand(`int ws connect ${url}`); return; }
+  // ---- ALWAYS WORKING COMMANDS ----
+  if(parts[0]==="nick"){
+    const newNick=parts.slice(1).join(" ");
+    if(newNick){ gashNickname=newNick; addToConsole(`> Nickname set to ${safeHTML(gashNickname)}`);}
+    else addToConsole(`> Current nickname: ${safeHTML(gashNickname)}`);
+    return;
+  }
 
+  if(command.startsWith("echo ")){ addToConsole(`> ${safeHTML(command.slice(5))}`); return; }
+  if(command==="help"){ addToConsole(`> Commands:
+  - join {preset|url}        Connect to server or preset
+  - int ws connect {url}     Connect to WS/REST server
+  - int ws send {msg}        Send raw message
+  - int ws disconnect        Disconnect WebSocket/REST
+  - int ws check             Show connection status
+  - nick {name}              Set your nickname
+  - say {msg}                Send a chat message
+  - autosay on/off           Toggle auto-say mode
+  - echo {msg}               Print message
+  - clear                    Clear console
+  - help                     Show this help`); return; }
+  if(command==="clear"){ consoleOutput.innerHTML=""; return; }
+  if(parts[0]==="autosay"){ gashAutoSay=(parts[1]==="on"); addToConsole(`> Auto-say: ${gashAutoSay?"ON":"OFF"}`); return; }
+
+  // ---- WEBSOCKET/REST COMMANDS ----
   if(command.startsWith("int ws")){
     const subCommand=parts[2];
     if(subCommand==="connect"){
-      const url=parts[3]; if(!url)return addToConsole("> Error: Missing URL");
+      const url=parts[3];
+      if(!url) return addToConsole("> Error: Missing URL");
       if(url.startsWith("http")){ gashUseREST=true; gashRESTUrl=url; startRESTPolling(); addToConsole(`> Using REST API at ${url}`); return; }
       if(!url.startsWith("ws://") && !url.startsWith("wss://")) return addToConsole("> Error: Invalid WebSocket URL.");
       try{
         gashWebSocket=new WebSocket(url);
         gashWebSocketUrl=url;
         gashWebSocket.onopen=()=>addToConsole(`> Connected to WebSocket: ${url}`);
-        gashWebSocket.onmessage=(event)=>{try{ const msg=JSON.parse(event.data); if(msg.user&&msg.msg){addToConsole(`> ${safeHTML(msg.user)}: ${safeHTML(msg.msg)}`);} else addToConsole(`> WS: ${safeHTML(event.data)}`);}catch{addToConsole(`> WS: ${safeHTML(event.data)}`);}};
-        gashWebSocket.onerror=()=>{addToConsole("> WebSocket error. Switching to REST fallback."); gashWebSocket=null; gashUseREST=true; gashRESTUrl=url.replace(/^ws/,"http"); startRESTPolling();};
-        gashWebSocket.onclose=()=>{addToConsole("> WebSocket closed."); gashWebSocket=null; gashWebSocketUrl=null;};
+        gashWebSocket.onmessage=(event)=>{
+          try{ const msg=JSON.parse(event.data); if(msg.user && msg.msg) addToConsole(`> ${safeHTML(msg.user)}: ${safeHTML(msg.msg)}`); else addToConsole(`> WS: ${safeHTML(event.data)}`); }
+          catch{ addToConsole(`> WS: ${safeHTML(event.data)}`); }
+        };
+        gashWebSocket.onerror=()=>{ addToConsole("> WebSocket error. Switching to REST fallback."); gashWebSocket=null; gashUseREST=true; gashRESTUrl=url.replace(/^ws/,"http"); startRESTPolling(); };
+        gashWebSocket.onclose=()=>{ addToConsole("> WebSocket closed."); gashWebSocket=null; gashWebSocketUrl=null; };
       }catch(e){ addToConsole(`> Error: ${e.message}`); }
-    } else if(subCommand==="send"){
-      const msg=parts.slice(3).join(" ");
-      if(gashUseREST){ restSendMessage(msg); addToConsole(`> (REST) ${gashNickname}: ${safeHTML(msg)}`); }
-      else if(gashWebSocket && gashWebSocket.readyState===WebSocket.OPEN){ gashWebSocket.send(msg); addToConsole(`> Sent: ${safeHTML(msg)}`); }
-      else addToConsole("> Error: Not connected.");
-    } else if(subCommand==="disconnect"){
-      if(gashWebSocket){ gashWebSocket.close(); addToConsole("> Closing WebSocket..."); }
-      if(gashUseREST && gashRESTPoller){ clearInterval(gashRESTPoller); addToConsole("> Stopped REST polling."); gashUseREST=false; }
-    } else if(subCommand==="check"){
-      if(gashUseREST) addToConsole(`> Using REST at ${gashRESTUrl}`);
-      else if(gashWebSocket && gashWebSocket.readyState===WebSocket.OPEN) addToConsole(`> Connected to WS: ${gashWebSocketUrl}`);
-      else addToConsole("> No active connection.");
+      return;
     }
+    else if(subCommand==="send"){ const msg=parts.slice(3).join(" "); if(gashUseREST){ restSendMessage(msg); addToConsole(`> (REST) ${gashNickname}: ${safeHTML(msg)}`); } else if(gashWebSocket && gashWebSocket.readyState===WebSocket.OPEN){ gashWebSocket.send(msg); addToConsole(`> Sent: ${safeHTML(msg)}`); } else addToConsole("> Error: Not connected."); return; }
+    else if(subCommand==="disconnect"){ if(gashWebSocket){ gashWebSocket.close(); addToConsole("> Closing WebSocket..."); } if(gashUseREST && gashRESTPoller){ clearInterval(gashRESTPoller); addToConsole("> Stopped REST polling."); gashUseREST=false; } return; }
+    else if(subCommand==="check"){ if(gashUseREST) addToConsole(`> Using REST at ${gashRESTUrl}`); else if(gashWebSocket && gashWebSocket.readyState===WebSocket.OPEN) addToConsole(`> Connected to WS: ${gashWebSocketUrl}`); else addToConsole("> No active connection."); return; }
+    else { addToConsole("> Usage: int ws {connect|send|disconnect|check}"); return; }
   }
 
-  else if(parts[0]==="nick"){ const newNick=parts.slice(1).join(" "); if(newNick){gashNickname=newNick; addToConsole(`> Nickname set to ${safeHTML(gashNickname)}`);} else addToConsole(`> Current nickname: ${safeHTML(gashNickname)}`); }
+  // ---- SAY (requires connection) ----
+  if(parts[0]==="say"){
+    const msg=parts.slice(1).join(" ");
+    if(!msg) return addToConsole("> Error: No message.");
+    if(gashUseREST){ restSendMessage(msg); addToConsole(`> (REST) ${gashNickname}: ${safeHTML(msg)}`); }
+    else if(gashWebSocket && gashWebSocket.readyState===WebSocket.OPEN){ gashWebSocket.send(JSON.stringify({user:gashNickname,msg})); addToConsole(`> ${gashNickname}: ${safeHTML(msg)}`); }
+    else addToConsole("> Error: Not connected to a server.");
+    return;
+  }
 
-  else if(parts[0]==="say"){ const msg=parts.slice(1).join(" "); if(!msg)return addToConsole("> Error: No message."); if(gashUseREST){ restSendMessage(msg); addToConsole(`> (REST) ${gashNickname}: ${safeHTML(msg)}`);} else if(gashWebSocket && gashWebSocket.readyState===WebSocket.OPEN){ gashWebSocket.send(JSON.stringify({user:gashNickname,msg})); addToConsole(`> ${gashNickname}: ${safeHTML(msg)}`);} else addToConsole("> Error: Not connected."); }
-
-  else if(parts[0]==="autosay"){ const arg=parts[1]; if(arg==="on")gashAutoSay=true; else if(arg==="off")gashAutoSay=false; addToConsole(`> Auto-say: ${gashAutoSay?"ON":"OFF"}`); }
-
-  else if(command.startsWith("echo ")) addToConsole(`> ${safeHTML(command.slice(5))}`);
-
-  else if(command==="help") addToConsole(`> Commands:
-  - join {url}              Connect to server
-  - leave                   Disconnect
-  - say {msg}               Send a chat message
-  - autosay on/off          Toggle auto-say mode
-  - nick {name}             Set nickname
-  - status                  Show connection status
-  - echo {msg}              Print message
-  - help                    Show this help
-  - clear                   Clear console`);
-
-  else if(command==="clear") consoleOutput.innerHTML="";
-
-  else addToConsole("> Unknown command");
+  addToConsole("> Unknown command");
 }
 
 // Console output
