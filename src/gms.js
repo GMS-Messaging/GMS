@@ -24,7 +24,21 @@ function safeHTML(str){ return DOMPurify.sanitize(str); }
 // Join presets
 const joinPresets = { gms: "wss://gms-1-0.onrender.com" };
 
-// Input handling
+// Input rendering
+function renderInput(){
+  const before=currentInput.slice(0,cursorIndex);
+  const after=currentInput.slice(cursorIndex);
+  inputText.innerHTML="";
+  const spanBefore=document.createTextNode(before);
+  const caretSpan=document.createElement("span");
+  caretSpan.id="caret"; caretSpan.textContent="█";
+  const spanAfter=document.createTextNode(after);
+  inputText.appendChild(spanBefore);
+  inputText.appendChild(caretSpan);
+  inputText.appendChild(spanAfter);
+}
+
+// Key handling
 document.addEventListener("keydown", (event) => {
   if(event.key==="Backspace"){ if(cursorIndex>0){ currentInput=currentInput.slice(0,cursorIndex-1)+currentInput.slice(cursorIndex); cursorIndex--; } }
   else if(event.key==="Delete"){ if(cursorIndex<currentInput.length) currentInput=currentInput.slice(0,cursorIndex)+currentInput.slice(cursorIndex+1); }
@@ -42,19 +56,17 @@ document.addEventListener("keydown", (event) => {
     commandHistory.push(trimmed);
     historyIndex=commandHistory.length;
 
-    if(gashAutoSay && !trimmed.startsWith("say") && !trimmed.startsWith("int") && !trimmed.startsWith("join")){
+    const parts = trimmed.split(" ");
+    const nonChatCommands = ["int","join","nick","echo","help","clear","autosay"];
+    if(gashAutoSay && !nonChatCommands.includes(parts[0])){
       processCommand("say "+trimmed);
-    } else { processCommand(trimmed); }
+    } else { 
+      processCommand(trimmed); 
+    }
 
     currentInput=""; cursorIndex=0; renderInput();
   }
 });
-
-function renderInput(){
-  const before=currentInput.slice(0,cursorIndex);
-  const after=currentInput.slice(cursorIndex);
-  inputText.innerHTML=safeHTML(before)+`<span id="caret">█</span>`+safeHTML(after);
-}
 
 // REST helpers
 async function restSendMessage(msg){
@@ -83,7 +95,7 @@ function startRESTPolling(){
 function processCommand(command){
   const parts=command.split(" ");
 
-  // ---- JOIN PRESETS ----
+  // JOIN preset
   if(parts[0]==="join"){
     const target=parts[1];
     if(!target) return addToConsole("> Error: Missing server/preset name");
@@ -92,7 +104,7 @@ function processCommand(command){
     return;
   }
 
-  // ---- ALWAYS WORKING COMMANDS ----
+  // Always-working commands
   if(parts[0]==="nick"){
     const newNick=parts.slice(1).join(" ");
     if(newNick){ gashNickname=newNick; addToConsole(`> Nickname set to ${safeHTML(gashNickname)}`);}
@@ -116,7 +128,7 @@ function processCommand(command){
   if(command==="clear"){ consoleOutput.innerHTML=""; return; }
   if(parts[0]==="autosay"){ gashAutoSay=(parts[1]==="on"); addToConsole(`> Auto-say: ${gashAutoSay?"ON":"OFF"}`); return; }
 
-  // ---- WEBSOCKET/REST COMMANDS ----
+  // WebSocket / REST commands
   if(command.startsWith("int ws")){
     const subCommand=parts[2];
     if(subCommand==="connect"){
@@ -143,7 +155,7 @@ function processCommand(command){
     else { addToConsole("> Usage: int ws {connect|send|disconnect|check}"); return; }
   }
 
-  // ---- SAY (requires connection) ----
+  // SAY command
   if(parts[0]==="say"){
     const msg=parts.slice(1).join(" ");
     if(!msg) return addToConsole("> Error: No message.");
