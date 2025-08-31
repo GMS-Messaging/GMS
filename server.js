@@ -3,7 +3,15 @@ const express = require("express");
 const { WebSocketServer } = require("ws");
 const http = require("http");
 const cors = require("cors");
-const cron = require("node-cron"); // scheduled tasks
+
+// Try to load node-cron
+let cron;
+try {
+  cron = require("node-cron");
+  console.log("🟢 node-cron loaded successfully");
+} catch (err) {
+  console.error("❌ Failed to load node-cron:", err);
+}
 
 const app = express();
 const server = http.createServer(app);
@@ -74,18 +82,20 @@ app.post("/clear", (req, res) => {
 });
 
 // ---- Cron job: clear chat every day at 00:00 EST/EDT ----
-cron.schedule('0 0 * * *', () => {
-  messages = [];
-  console.log("🧹 Chat history automatically cleared at 00:00 EST/EDT!");
+if (cron) {
+  cron.schedule('0 0 * * *', () => {
+    messages = [];
+    console.log("🧹 Chat history automatically cleared at 00:00 EST/EDT!");
 
-  const clearMsg = { system: true, msg: "🧹 Chat history automatically cleared (00:00 EST/EDT)." };
-  wss.clients.forEach(client => {
-    if (client.readyState === 1) client.send(JSON.stringify(clearMsg));
+    const clearMsg = { system: true, msg: "🧹 Chat history automatically cleared (00:00 EST/EDT)." };
+    wss.clients.forEach(client => {
+      if (client.readyState === 1) client.send(JSON.stringify(clearMsg));
+    });
+  }, {
+    scheduled: true,
+    timezone: "America/New_York"
   });
-}, {
-  scheduled: true,
-  timezone: "America/New_York"
-});
+}
 
 // ---- Start server ----
 const PORT = process.env.PORT || 10000;
