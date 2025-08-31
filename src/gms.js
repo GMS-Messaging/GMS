@@ -80,7 +80,10 @@ function applyThemeCSS(themeName){
         .misc-output { color: #666 !important; opacity:75%; }
         .misc-urgent-output { color: #CC3333 !important; opacity:75%; }
         #input-text, #caret { color: #333 !important; }
-      `; break;
+        #prompt { background:#f0f0f0; color:#333; padding:4px; border-top:1px solid #ccc; }
+      `;
+      break;
+
     case 'default': case 'green':
       css = `
         .command-output { color: #0F0 !important; }
@@ -89,7 +92,10 @@ function applyThemeCSS(themeName){
         .misc-output { color: #9e9e9e !important; opacity:75%; }
         .misc-urgent-output { color: #f55 !important; opacity:75%; }
         #input-text, #caret { color: #0F0 !important; }
-      `; break;
+        #prompt { background:#000; color:#0F0; padding:4px; border-top:1px solid #333; }
+      `;
+      break;
+
     case 'blue':
       css = `
         .command-output { color: #1E90FF !important; }
@@ -98,7 +104,10 @@ function applyThemeCSS(themeName){
         .misc-output { color: #AAA !important; opacity:75%; }
         .misc-urgent-output { color: #f55 !important; opacity:75%; }
         #input-text, #caret { color: #1E90FF !important; }
-      `; break;
+        #prompt { background:#001122; color:#1E90FF; padding:4px; border-top:1px solid #223; }
+      `;
+      break;
+
     case 'red':
       css = `
         .command-output { color: #F30 !important; }
@@ -107,7 +116,10 @@ function applyThemeCSS(themeName){
         .misc-output { color: #AAA !important; opacity:75%; }
         .misc-urgent-output { color: #F88 !important; opacity:75%; }
         #input-text, #caret { color: #F30 !important; }
-      `; break;
+        #prompt { background:#220000; color:#F30; padding:4px; border-top:1px solid #400; }
+      `;
+      break;
+
     case 'purple':
       css = `
         .command-output { color: #B6B !important; }
@@ -116,12 +128,15 @@ function applyThemeCSS(themeName){
         .misc-output { color: #AAA !important; opacity:75%; }
         .misc-urgent-output { color: #f55 !important; opacity:75%; }
         #input-text, #caret { color: #B6B !important; }
-      `; break;
+        #prompt { background:#110011; color:#B6B; padding:4px; border-top:1px solid #313; }
+      `;
+      break;
   }
 
   style.textContent = css;
   document.head.appendChild(style);
 }
+
 
 // Render input with caret
 function renderInput(){
