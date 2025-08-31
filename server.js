@@ -3,6 +3,7 @@ const express = require("express");
 const { WebSocketServer } = require("ws");
 const http = require("http");
 const cors = require("cors");
+const crypto = require("crypto");
 
 // Try to load node-cron
 let cron;
@@ -20,7 +21,54 @@ const wss = new WebSocketServer({ server });
 app.use(cors());
 app.use(express.json());
 
-let messages = []; // Store chat history
+// Master key (set via env var ideally)
+const MASTER_KEY = process.env.MASTER_KEY || "SuperSecretMasterKey123";
+
+// Chat history
+let messages = [];
+
+// Ephemeral keys
+let apiKeys = {
+  messages: crypto.randomBytes(16).toString("hex"),
+  clear: crypto.randomBytes(16).toString("hex"),
+  send: crypto.randomBytes(16).toString("hex"),
+};
+
+function regenerateKey(action, reason = "manual") {
+  const oldKey = apiKeys[action];
+  apiKeys[action] = crypto.randomBytes(16).toString("hex");
+
+  console.log(`🔑 [${action.toUpperCase()}] Key rotated (${reason})`);
+  console.log(`   Old: ${oldKey}`);
+  console.log(`   New: ${apiKeys[action]}`);
+}
+
+// Middleware for ephemeral keys
+function requireApiKey(action) {
+  return (req, res, next) => {
+    const key = req.headers["x-api-key"];
+    if (key !== apiKeys[action]) {
+      console.log(`🚫 [${action.toUpperCase()}] Invalid key attempt from ${req.ip}`);
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    console.log(`✅ [${action.toUpperCase()}] Key used successfully from ${req.ip}`);
+    regenerateKey(action, "use");
+    next();
+  };
+}
+
+// Middleware for master key
+function requireMasterKey(req, res, next) {
+  const key = req.headers["x-master-key"];
+  if (key !== MASTER_KEY) {
+    console.log(`🚫 MASTER key invalid attempt from ${req.ip}`);
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  console.log(`✅ MASTER key used successfully from ${req.ip}`);
+  next();
+}
 
 // ---- WebSocket handling ----
 wss.on("connection", (ws) => {
@@ -39,7 +87,7 @@ wss.on("connection", (ws) => {
 
       messages.push(msg);
 
-      // Broadcast to all clients
+      // Broadcast
       wss.clients.forEach((client) => {
         if (client.readyState === ws.OPEN) client.send(JSON.stringify(msg));
       });
@@ -51,34 +99,43 @@ wss.on("connection", (ws) => {
   ws.on("close", () => console.log("🚪 Client disconnected"));
 });
 
-// ---- REST endpoints ----
-app.get("/messages", (req, res) => res.json(messages));
+// ---- Routes ----
 
-app.post("/send", (req, res) => {
+// Admin: fetch current ephemeral keys
+app.get("/admin/keys", requireMasterKey, (req, res) => {
+  console.log(`📥 Admin requested keys from ${req.ip}`);
+  res.json(apiKeys);
+});
+
+app.get("/messages", requireApiKey("messages"), (req, res) => {
+  res.json(messages);
+});
+
+app.post("/send", requireApiKey("send"), (req, res) => {
   const { user, msg } = req.body;
   if (!user || !msg) return res.status(400).json({ error: "Missing user or msg" });
 
   const newMsg = { user, msg };
-  console.log(`💬 [${user}]: ${msg}`);
   messages.push(newMsg);
 
   wss.clients.forEach((client) => {
     if (client.readyState === 1) client.send(JSON.stringify(newMsg));
   });
 
+  console.log(`💬 Message sent by ${user}: "${msg}"`);
   res.json({ success: true });
 });
 
-app.post("/clear", (req, res) => {
+app.post("/clear", requireApiKey("clear"), (req, res) => {
   messages = [];
-  console.log("🧹 Chat history cleared!");
+  console.log("🧹 Chat history cleared manually!");
 
-  const clearMsg = { system: true, msg: "🧹 Chat history has been cleared." };
+  const clearMsg = { system: true, msg: "🧹 Chat history cleared by admin." };
   wss.clients.forEach((client) => {
     if (client.readyState === 1) client.send(JSON.stringify(clearMsg));
   });
 
-  res.json({ success: true, msg: "Chat history cleared" });
+  res.json({ success: true });
 });
 
 // ---- Cron job: clear chat every day at 00:00 EST/EDT ----
@@ -96,6 +153,13 @@ if (cron) {
     timezone: "America/New_York"
   });
 }
+
+// ---- Auto-rotate keys every 5 minutes ----
+setInterval(() => {
+  Object.keys(apiKeys).forEach(action => {
+    regenerateKey(action, "timer");
+  });
+}, 5 * 60 * 1000);
 
 // ---- Start server ----
 const PORT = process.env.PORT || 10000;
