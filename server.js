@@ -22,7 +22,7 @@ app.use(cors());
 app.use(express.json());
 
 // Master key (set via env var ideally)
-const MASTER_KEY = process.env.MASTER_KEY || "SuperSecretMasterKey123";
+const MASTER_KEY = process.env.MASTER_KEY || "GalaxyGlitchYT#144";
 
 // Chat history
 let messages = [];
