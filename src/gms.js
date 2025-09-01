@@ -52,8 +52,8 @@ const availableThemes = {
   green: "theme-green",
   yellow: "theme-yellow",
   pink: "theme-pink",
-  midnight: "theme-midnight"
-  abyss: "theme-abyss"
+  midnight: "theme-midnight",
+  abyss: "theme-abyss",
 };
 
 // Apply theme
