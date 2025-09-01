@@ -173,8 +173,8 @@ function applyThemeCSS(themeName){
       `;
       break;
   
-      case 'abyss':
-        css = `
+    case 'abyss':
+       css = `
           .command-output { color: #080a45 !important; }   
           .error-output { color: #0c0f55 !important; }     
           .help-output { color: #181932 !important; }     
