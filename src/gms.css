@@ -56,6 +56,8 @@ body {
 .theme-red{background-color:#1F1F1F;color:#FF4500;}
 .theme-purple{background-color:#1F1F1F;color:#800080;}
 .theme-green{background-color:#003300;color:#00FF00;}
+.theme-yellow{background-color:#191b00;color:#c5e702;}
+.theme-pink{background-color: #c70063;color: white}
 
 input,button,textarea {
   background-color:black;

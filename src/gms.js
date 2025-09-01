@@ -49,7 +49,9 @@ const availableThemes = {
   blue: "theme-blue",
   red: "theme-red",
   purple: "theme-purple",
-  green: "theme-green"
+  green: "theme-green",
+  yellow: "theme-yellow",
+  pink: "theme-pink",
 };
 
 // Apply theme
@@ -131,6 +133,32 @@ function applyThemeCSS(themeName){
         #prompt { background:#110011; color:#B6B; padding:4px; border-top:1px solid #313; }
       `;
       break;
+
+    case 'yellow':
+      css = `
+        .command-output { color: #FFD700 !important; }  
+        .error-output { color: #FF6347 !important; }    
+        .help-output { color: #FFFF66 !important; }      
+        .misc-output { color: #CCCC66 !important; opacity:75%; }
+        .misc-urgent-output { color: #FFAA00 !important; opacity:75%; }
+        #input-text, #caret { color: #FFD700 !important; }
+        #prompt { background: #332B00; color: #FFD700; padding:4px; border-top:1px solid #665500; }
+      `;
+      break;
+        
+      case 'pink':
+      css = `
+        .command-output { color: #FF69B4 !important; }   /* hot pink */
+        .error-output { color: #FF3366 !important; }     /* strong pink-red for errors */
+        .help-output { color: #FFB6C1 !important; }      /* light pink */
+        .misc-output { color: #FF99CC !important; opacity:75%; }
+        .misc-urgent-output { color: #FF0066 !important; opacity:75%; }
+        #input-text, #caret { color: #FF69B4 !important; }
+        #prompt { background: #33001A; color: #FF69B4; padding:4px; border-top:1px solid #660033; }
+      `;
+      break;
+
+
   }
 
   style.textContent = css;
