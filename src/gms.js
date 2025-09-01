@@ -53,7 +53,7 @@ const availableThemes = {
   yellow: "theme-yellow",
   pink: "theme-pink",
   midnight: "theme-midnight",
-  abyss: "theme-abyss",
+  abyss: "theme-abyss"
 };
 
 // Apply theme
