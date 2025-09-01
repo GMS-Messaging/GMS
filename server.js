@@ -21,29 +21,30 @@ const wss = new WebSocketServer({ server });
 app.use(cors());
 app.use(express.json());
 
-// Master key (set via env var ideally)
-const MASTER_KEY = process.env.MASTER_KEY || "GalaxyGlitchYT#144";
+// ---- Master key from Render environment variable ----
+const MASTER_KEY = process.env.MASTER_KEY;
+if (!MASTER_KEY) {
+  console.error("❌ MASTER_KEY environment variable not set! Exiting...");
+  process.exit(1);
+}
 
-// Chat history
-let messages = [];
-
-// Ephemeral keys
+// ---- Ephemeral API keys ----
 let apiKeys = {
-  messages: crypto.randomBytes(16).toString("hex"),
-  clear: crypto.randomBytes(16).toString("hex"),
-  send: crypto.randomBytes(16).toString("hex"),
+  messages: crypto.randomBytes(32).toString("hex"),
+  send: crypto.randomBytes(32).toString("hex"),
+  clear: crypto.randomBytes(32).toString("hex"),
 };
 
 function regenerateKey(action, reason = "manual") {
   const oldKey = apiKeys[action];
-  apiKeys[action] = crypto.randomBytes(16).toString("hex");
+  apiKeys[action] = crypto.randomBytes(32).toString("hex");
 
   console.log(`🔑 [${action.toUpperCase()}] Key rotated (${reason})`);
   console.log(`   Old: ${oldKey}`);
   console.log(`   New: ${apiKeys[action]}`);
 }
 
-// Middleware for ephemeral keys
+// ---- Middleware ----
 function requireApiKey(action) {
   return (req, res, next) => {
     const key = req.headers["x-api-key"];
@@ -58,7 +59,6 @@ function requireApiKey(action) {
   };
 }
 
-// Middleware for master key
 function requireMasterKey(req, res, next) {
   const key = req.headers["x-master-key"];
   if (key !== MASTER_KEY) {
@@ -70,24 +70,24 @@ function requireMasterKey(req, res, next) {
   next();
 }
 
-// ---- WebSocket handling ----
+// ---- Chat storage ----
+let messages = [];
+
+// ---- WebSocket ----
 wss.on("connection", (ws) => {
   console.log("🔌 Client connected");
 
-  // Send welcome & recent history
   ws.send(JSON.stringify({ system: true, msg: "✅ Connected to GMS WebSocket" }));
   messages.forEach((m) => ws.send(JSON.stringify(m)));
 
   ws.on("message", (data) => {
     try {
       const msg = JSON.parse(data.toString());
-
       if (msg.user && msg.msg) console.log(`💬 [${msg.user}]: ${msg.msg}`);
       else console.log("📩 Raw:", msg);
 
       messages.push(msg);
 
-      // Broadcast
       wss.clients.forEach((client) => {
         if (client.readyState === ws.OPEN) client.send(JSON.stringify(msg));
       });
@@ -101,16 +101,18 @@ wss.on("connection", (ws) => {
 
 // ---- Routes ----
 
-// Admin: fetch current ephemeral keys
+// Admin: fetch ephemeral keys
 app.get("/admin/keys", requireMasterKey, (req, res) => {
   console.log(`📥 Admin requested keys from ${req.ip}`);
   res.json(apiKeys);
 });
 
+// Fetch messages
 app.get("/messages", requireApiKey("messages"), (req, res) => {
   res.json(messages);
 });
 
+// Send message
 app.post("/send", requireApiKey("send"), (req, res) => {
   const { user, msg } = req.body;
   if (!user || !msg) return res.status(400).json({ error: "Missing user or msg" });
@@ -126,6 +128,7 @@ app.post("/send", requireApiKey("send"), (req, res) => {
   res.json({ success: true });
 });
 
+// Clear messages
 app.post("/clear", requireApiKey("clear"), (req, res) => {
   messages = [];
   console.log("🧹 Chat history cleared manually!");
@@ -138,7 +141,7 @@ app.post("/clear", requireApiKey("clear"), (req, res) => {
   res.json({ success: true });
 });
 
-// ---- Cron job: clear chat every day at 00:00 EST/EDT ----
+// ---- Cron job: daily clear at 00:00 EST ----
 if (cron) {
   cron.schedule('0 0 * * *', () => {
     messages = [];
