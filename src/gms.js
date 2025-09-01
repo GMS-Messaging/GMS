@@ -109,6 +109,7 @@ function applyThemeCSS(themeName){
         .misc-urgent-output { color: #f55 !important; opacity:75%; }
         #input-text, #caret { color: #1E90FF !important; }
         #prompt { background:#001122; color:#1E90FF; padding:4px; border-top:1px solid #223; }
+        ::selection{background-color: #1390FF; color: #b8b5fbff;}
       `;
       break;
 
@@ -121,6 +122,7 @@ function applyThemeCSS(themeName){
         .misc-urgent-output { color: #F88 !important; opacity:75%; }
         #input-text, #caret { color: #F30 !important; }
         #prompt { background:#220000; color:#F30; padding:4px; border-top:1px solid #400; }
+        ::selection{background-color: #f30; color: #000;}
       `;
       break;
 
@@ -133,6 +135,7 @@ function applyThemeCSS(themeName){
         .misc-urgent-output { color: #f55 !important; opacity:75%; }
         #input-text, #caret { color: #B6B !important; }
         #prompt { background:#110011; color:#B6B; padding:4px; border-top:1px solid #313; }
+        ::selection{background-color: #8e0790ff; color: #be5cffff;}
       `;
       break;
 
@@ -145,6 +148,7 @@ function applyThemeCSS(themeName){
         .misc-urgent-output { color: #FFAA00 !important; opacity:75%; }
         #input-text, #caret { color: #FFD700 !important; }
         #prompt { background: #332B00; color: #FFD700; padding:4px; border-top:1px solid #665500; }
+        ::selection{background-color: #a8b700ff; color: #000;}
       `;
       break;
         
@@ -157,6 +161,7 @@ function applyThemeCSS(themeName){
         .misc-urgent-output { color: #FF0066 !important; opacity:75%; }
         #input-text, #caret { color: #FF69B4 !important; }
         #prompt { background: #33001A; color: #FF69B4; padding:4px; border-top:1px solid #660033; }
+        ::selection{background-color: #ff136aff; color: #f5f5f5;}
       `;
       break;
 
@@ -170,6 +175,7 @@ function applyThemeCSS(themeName){
         #input-text, #caret { color: #A59AFF !important; }   /* match command output */
          #prompt { background: linear-gradient(to bottom, #1B003F, #2E0057, #3A006E); 
                   color: #A59AFF; padding:4px; border-top:1px solid #4B0082; }
+        ::selection{background-color: #3b0483ff; color: #b8b5fbff;}
       `;
       break;
   
@@ -182,6 +188,7 @@ function applyThemeCSS(themeName){
           .misc-urgent-output { color: #1c215c !important; opacity:75%; }
           #input-text, #caret { color: #141a5f !important; }
           #prompt { background: #02041d; color: #1b2067; padding:4px; border-top:1px solid #660033; }
+        ::selection{background-color: #02041d; color: #b8b5fbff;}
         `;
         break;
 
