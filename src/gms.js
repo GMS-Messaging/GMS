@@ -243,7 +243,7 @@ document.addEventListener("keydown", event => {
     commandHistory.push(trimmed);
     historyIndex = commandHistory.length;
 
-    const nonChatCommands = ["join","nick","echo","help","clear","autosay","say","theme","gms","uid"];
+    const nonChatCommands = ["join","nick","echo","help","clear","autosay","say","theme","gms","uid","updlog"];
     if(gashAutoSay && !nonChatCommands.includes(trimmed.split(" ")[0].toLowerCase())){
       processCommand("say "+trimmed);
     } else processCommand(trimmed);
@@ -324,9 +324,25 @@ function processCommand(command){
   - theme {name}             Change theme (default/light/blue/red/purple/green/yellow/pink/midnight/abyss)
   - echo {msg}               Print message
   - clear                    Clear console
+  - uid                      Prints your userId to the console. (no one will see.)
+  - updlog                   Shows GMS update logs
   - help                     Show this help`, "help-output");
     return;
   }
+
+if (cmd === "updlog") {
+  addToConsole(
+    `> Update Log:
+  GMS 1.0.1-official
+- Fixed theme selection stayin green
+- added like 4 new themes
+- Added updlog and uid command`,
+    "misc-output"
+  );
+  return;
+}
+
+
 
   if(cmd === "clear"){ consoleOutput.textContent=""; return; }
   if(cmd === "autosay"){ gashAutoSay = (parts[1]==="on"); addToConsole(`> Auto-say: ${gashAutoSay?"ON":"OFF"}`,"command-output"); return; }
