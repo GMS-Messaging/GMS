@@ -53,7 +53,7 @@ const availableThemes = {
   yellow: "theme-yellow",
   pink: "theme-pink",
   midnight: "theme-midnight"
-  void: "theme-void"
+  abyss: "theme-abyss"
 };
 
 // Apply theme
@@ -148,7 +148,7 @@ function applyThemeCSS(themeName){
       `;
       break;
         
-      case 'pink':
+     case 'pink':
       css = `
         .command-output { color: #FF69B4 !important; }   /* hot pink */
         .error-output { color: #FF3366 !important; }     /* strong pink-red for errors */
@@ -160,30 +160,30 @@ function applyThemeCSS(themeName){
       `;
       break;
 
-case 'midnight':
-  css = `
-    .command-output { color: #A59AFF !important; }       /* soft purple for normal output */
-    .error-output { color: #FF6B6B !important; }         /* soft red for errors */
-    .help-output { color: #D8BFFF !important; }          /* light purple for help */
-    .misc-output { color: #BFAFFF !important; opacity:75%; }   /* muted purple for misc */
-    .misc-urgent-output { color: #FF99FF !important; opacity:75%; } /* neon purple for urgent misc */
-    #input-text, #caret { color: #A59AFF !important; }   /* match command output */
-    #prompt { background: linear-gradient(to bottom, #1B003F, #2E0057, #3A006E); 
-              color: #A59AFF; padding:4px; border-top:1px solid #4B0082; }
-  `;
-  break;
-
-      case 'void':
-      css = `
-        .command-output { color: #080a45 !important; }   
-        .error-output { color: #0c0f55 !important; }     
-        .help-output { color: #181932 !important; }     
-        .misc-output { color: #212242 !important; opacity:75%; }
-        .misc-urgent-output { color: #1c215c !important; opacity:75%; }
-        #input-text, #caret { color: #141a5f !important; }
-        #prompt { background: #02041d; color: #1b2067; padding:4px; border-top:1px solid #660033; }
+    case 'midnight':
+       css = `
+         .command-output { color: #A59AFF !important; }       /* soft purple for normal output */
+         .error-output { color: #FF6B6B !important; }         /* soft red for errors */
+        .help-output { color: #D8BFFF !important; }          /* light purple for help */
+        .misc-output { color: #BFAFFF !important; opacity:75%; }   /* muted purple for misc */
+        .misc-urgent-output { color: #FF99FF !important; opacity:75%; } /* neon purple for urgent misc */
+        #input-text, #caret { color: #A59AFF !important; }   /* match command output */
+         #prompt { background: linear-gradient(to bottom, #1B003F, #2E0057, #3A006E); 
+                  color: #A59AFF; padding:4px; border-top:1px solid #4B0082; }
       `;
       break;
+  
+      case 'abyss':
+        css = `
+          .command-output { color: #080a45 !important; }   
+          .error-output { color: #0c0f55 !important; }     
+          .help-output { color: #181932 !important; }     
+          .misc-output { color: #212242 !important; opacity:75%; }
+          .misc-urgent-output { color: #1c215c !important; opacity:75%; }
+          #input-text, #caret { color: #141a5f !important; }
+          #prompt { background: #02041d; color: #1b2067; padding:4px; border-top:1px solid #660033; }
+        `;
+        break;
 
 
   }
@@ -314,7 +314,7 @@ function processCommand(command){
   - nick {name}              Set nickname
   - say {msg}                Send chat message
   - autosay on/off           Toggle auto-say
-  - theme {name}             Change theme (default/light/blue/red/purple/green/yellow/pink/midnight/void)
+  - theme {name}             Change theme (default/light/blue/red/purple/green/yellow/pink/midnight/abyss)
   - echo {msg}               Print message
   - clear                    Clear console
   - help                     Show this help`, "help-output");
