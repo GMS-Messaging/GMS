@@ -57,9 +57,9 @@ body {
 .theme-purple{background-color:#1F1F1F;color:#800080;}
 .theme-green{background-color:#003300;color:#00FF00;}
 .theme-yellow{background-color:#191b00;color:#c5e702;}
-.theme-pink{background-color: #c70063;color: white}
-.theme-midnight{background: linear-gradient(to bottom, #000000, #190057,#100046 , #3A006E);color: whitesmoke}
-.theme-void{background-color: #000000;color: #000237}
+.theme-pink{background-color: #c70063;color: white;}
+.theme-midnight{background: linear-gradient(to bottom, #000000, #190057,#100046 , #3A006E);color: whitesmoke;}
+.theme-void{background-color:#020312;color:#000237;}
 
 input,button,textarea {
   background-color:black;
@@ -71,4 +71,5 @@ input,button,textarea {
 input:focus, button:focus, textarea:focus { border-color:#00FF00; }
 
 ::selection { background-color:#00FF00; color:black; }
+
 
