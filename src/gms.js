@@ -303,7 +303,7 @@ function processCommand(command){
   - nick {name}              Set nickname
   - say {msg}                Send chat message
   - autosay on/off           Toggle auto-say
-  - theme {name}             Change theme (default/light/blue/red/purple/green/yellow/pink)
+  - theme {name}             Change theme (default/light/blue/red/purple/green/yellow/pink/midnight)
   - echo {msg}               Print message
   - clear                    Clear console
   - help                     Show this help`, "help-output");
