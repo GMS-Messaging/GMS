@@ -58,6 +58,7 @@ body {
 .theme-green{background-color:#003300;color:#00FF00;}
 .theme-yellow{background-color:#191b00;color:#c5e702;}
 .theme-pink{background-color: #c70063;color: white}
+.theme-midnight{background: linear-gradient(to bottom, #000000, #190057,#100046 , #3A006E);color: whitesmoke}
 
 input,button,textarea {
   background-color:black;

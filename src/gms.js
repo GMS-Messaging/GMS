@@ -52,6 +52,7 @@ const availableThemes = {
   green: "theme-green",
   yellow: "theme-yellow",
   pink: "theme-pink",
+  midnight: "theme-midnight"
 };
 
 // Apply theme
@@ -157,6 +158,21 @@ function applyThemeCSS(themeName){
         #prompt { background: #33001A; color: #FF69B4; padding:4px; border-top:1px solid #660033; }
       `;
       break;
+
+case 'midnight':
+  css = `
+    .command-output { color: #A59AFF !important; }       /* soft purple for normal output */
+    .error-output { color: #FF6B6B !important; }         /* soft red for errors */
+    .help-output { color: #D8BFFF !important; }          /* light purple for help */
+    .misc-output { color: #BFAFFF !important; opacity:75%; }   /* muted purple for misc */
+    .misc-urgent-output { color: #FF99FF !important; opacity:75%; } /* neon purple for urgent misc */
+    #input-text, #caret { color: #A59AFF !important; }   /* match command output */
+    #prompt { background: linear-gradient(to bottom, #1B003F, #2E0057, #3A006E); 
+              color: #A59AFF; padding:4px; border-top:1px solid #4B0082; }
+  `;
+  break;
+
+
 
 
   }
