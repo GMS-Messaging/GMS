@@ -52,7 +52,7 @@ const availableThemes = {
   green: "theme-green",
   yellow: "theme-yellow",
   pink: "theme-pink",
-  midnight: "theme-midnight",
+  midnight: "theme-midnight"
   abyss: "theme-abyss"
 };
 
