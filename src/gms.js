@@ -53,6 +53,7 @@ const availableThemes = {
   yellow: "theme-yellow",
   pink: "theme-pink",
   midnight: "theme-midnight"
+  void: "theme-void"
 };
 
 // Apply theme
@@ -172,7 +173,17 @@ case 'midnight':
   `;
   break;
 
-
+      case 'void':
+      css = `
+        .command-output { color: #080a45 !important; }   
+        .error-output { color: #0c0f55 !important; }     
+        .help-output { color: #181932 !important; }     
+        .misc-output { color: #212242 !important; opacity:75%; }
+        .misc-urgent-output { color: #1c215c !important; opacity:75%; }
+        #input-text, #caret { color: #141a5f !important; }
+        #prompt { background: #02041d; color: #1b2067; padding:4px; border-top:1px solid #660033; }
+      `;
+      break;
 
 
   }
@@ -303,7 +314,7 @@ function processCommand(command){
   - nick {name}              Set nickname
   - say {msg}                Send chat message
   - autosay on/off           Toggle auto-say
-  - theme {name}             Change theme (default/light/blue/red/purple/green/yellow/pink/midnight)
+  - theme {name}             Change theme (default/light/blue/red/purple/green/yellow/pink/midnight/void)
   - echo {msg}               Print message
   - clear                    Clear console
   - help                     Show this help`, "help-output");
