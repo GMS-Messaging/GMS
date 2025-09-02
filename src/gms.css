@@ -42,6 +42,17 @@ body {
   font-weight:bold;
 }
 
+#connection-status {
+  position: fixed;
+  top: 4px;
+  right: 8px;
+  font-size: 14px;
+  font-weight: bold;
+}
+.status-connected { color: #0F0; }
+.status-disconnected { color: #F33; }
+
+
 @keyframes blink { 50%{ opacity:0; } }
 
 .command-output{color:white;}

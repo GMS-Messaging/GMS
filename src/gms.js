@@ -1,4 +1,5 @@
-// GMS (Gash Messaging Software)
+
+// GMS (Gash Messaging Software) - Enhanced
 let consoleOutput = document.getElementById("console-output");
 let inputText = document.getElementById("input-text");
 
@@ -19,6 +20,62 @@ let gashAutoSay = true;
 let gashUserId = "user_" + Math.random().toString(36).substr(2, 9);
 let gashCurrentTheme = "default";
 
+// New features
+let gashPingSoundEnabled = true;
+let isConnected = false;
+let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+// Mobile input handling
+let mobileInputBuffer = "";
+
+// Audio context for ping sounds
+let audioContext = null;
+
+// Initialize audio context (must be done after user interaction)
+function initAudio() {
+  if (!audioContext) {
+    try {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (e) {
+      console.log("Audio context not supported");
+    }
+  }
+}
+
+// Play ping sound
+function playPingSound() {
+  if (!gashPingSoundEnabled || !audioContext) return;
+  
+  try {
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1);
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.2);
+  } catch (e) {
+    console.log("Error playing ping sound:", e);
+  }
+}
+
+// Update connection status
+function updateConnectionStatus(connected) {
+  isConnected = connected;
+  const statusElement = document.getElementById("connection-status");
+  if (statusElement) {
+    statusElement.textContent = connected ? "● Connected" : "● Disconnected";
+    statusElement.className = connected ? "status-connected" : "status-disconnected";
+  }
+}
+
 // Safe text sanitization
 function sanitizeText(str) {
   if (typeof str !== 'string') return '';
@@ -27,6 +84,17 @@ function sanitizeText(str) {
     ALLOWED_TAGS: ['b', 'i', 'u', 'strong', 'em', 'img'],
     ALLOWED_ATTR: ['src', 'alt']
   });
+}
+
+// Process emojis with Twemoji
+function processEmojis(text) {
+  if (typeof twemoji !== 'undefined') {
+    return twemoji.parse(text, {
+      size: '16x16',
+      ext: '.png'
+    });
+  }
+  return text;
 }
 
 // Validate message object from server
@@ -67,7 +135,11 @@ function applyTheme(themeName) {
   if (availableThemes[themeName]) {
     document.body.classList.add(availableThemes[themeName]);
     gashCurrentTheme = themeName;
-    localStorage.setItem("gmsTheme", themeName); // save theme persistently
+    try {
+      localStorage.setItem("gmsTheme", themeName);
+    } catch (e) {
+      console.log("LocalStorage not available");
+    }
     applyThemeCSS(themeName);
   }
 }
@@ -119,28 +191,25 @@ function applyThemeCSS(themeName) {
       `;
       break;
 
-
-case 'sky':
-  css = `
-    .command-output { color: #1E90FF !important; }      /* Dodger Blue */
-    .error-output { color: #F66 !important; }          /* Red for errors */
-    .help-output { color: #0FF !important; }           /* Cyan for help */
-    .misc-output { color: #FFF !important; opacity:75%; }  /* White misc text */
-    .misc-urgent-output { color: #f55 !important; opacity:75%; } /* Red-ish urgent */
-    
-    #input-text, #caret { color: #FFFFFF !important; }  /* White input text */
-    #prompt { 
-      background: #1E90FF;   /* Dodger blue prompt background for contrast */
-      color: #FFFFFF; 
-      padding: 4px; 
-      border-top: 1px solid #223; 
-    }
-    
-    ::selection { background-color: #1390FF; color: #FFFFFF; } /* Selection styling */
-  `;
-  break;
-
-
+    case 'sky':
+      css = `
+        .command-output { color: #1E90FF !important; }
+        .error-output { color: #F66 !important; }
+        .help-output { color: #0FF !important; }
+        .misc-output { color: #FFF !important; opacity:75%; }
+        .misc-urgent-output { color: #f55 !important; opacity:75%; }
+        
+        #input-text, #caret { color: #FFFFFF !important; }
+        #prompt { 
+          background: #1E90FF;
+          color: #FFFFFF; 
+          padding: 4px; 
+          border-top: 1px solid #223; 
+        }
+        
+        ::selection { background-color: #1390FF; color: #FFFFFF; }
+      `;
+      break;
 
     case 'red':
       css = `
@@ -183,9 +252,9 @@ case 'sky':
 
     case 'pink':
       css = `
-        .command-output { color: #FF69B4 !important; }   /* hot pink */
-        .error-output { color: #FF3366 !important; }     /* strong pink-red for errors */
-        .help-output { color: #FFB6C1 !important; }      /* light pink */
+        .command-output { color: #FF69B4 !important; }
+        .error-output { color: #FF3366 !important; }
+        .help-output { color: #FFB6C1 !important; }
         .misc-output { color: #FF99CC !important; opacity:75%; }
         .misc-urgent-output { color: #FF0066 !important; opacity:75%; }
         #input-text, #caret { color: #FF69B4 !important; }
@@ -196,12 +265,12 @@ case 'sky':
 
     case 'midnight':
       css = `
-        .command-output { color: #A59AFF !important; }       /* soft purple for normal output */
-        .error-output { color: #FF6B6B !important; }         /* soft red for errors */
-        .help-output { color: #D8BFFF !important; }          /* light purple for help */
-        .misc-output { color: #BFAFFF !important; opacity:75%; }   /* muted purple for misc */
-        .misc-urgent-output { color: #FF99FF !important; opacity:75%; } /* neon purple for urgent misc */
-        #input-text, #caret { color: #A59AFF !important; }   /* match command output */
+        .command-output { color: #A59AFF !important; }
+        .error-output { color: #FF6B6B !important; }
+        .help-output { color: #D8BFFF !important; }
+        .misc-output { color: #BFAFFF !important; opacity:75%; }
+        .misc-urgent-output { color: #FF99FF !important; opacity:75%; }
+        #input-text, #caret { color: #A59AFF !important; }
         #prompt { background: linear-gradient(to bottom, #1B003F, #2E0057, #3A006E); 
                   color: #A59AFF; padding:4px; border-top:1px solid #4B0082; }
         ::selection{background-color: #3b0483ff; color: #b8b5fbff;}
@@ -222,6 +291,48 @@ case 'sky':
       break;
   }
 
+  // Mobile responsive adjustments
+  if (isMobile) {
+    css += `
+      body { font-size: 16px; }
+      #console-output { padding: 8px; }
+      #prompt { padding: 8px; font-size: 16px; }
+      #connection-status { font-size: 12px; top: 2px; right: 4px; }
+      #mobile-input-helper { 
+        position: fixed; 
+        bottom: 0; 
+        left: 0; 
+        width: 100%; 
+        height: 40px; 
+        background: rgba(0,0,0,0.8); 
+        display: flex; 
+        align-items: center; 
+        padding: 0 10px; 
+        border-top: 1px solid #333;
+      }
+      #mobile-input { 
+        flex: 1; 
+        background: transparent; 
+        border: none; 
+        color: inherit; 
+        font-family: inherit; 
+        font-size: 14px; 
+        outline: none; 
+      }
+      #mobile-send-btn { 
+        background: #333; 
+        border: 1px solid #666; 
+        color: inherit; 
+        padding: 5px 10px; 
+        margin-left: 10px; 
+        border-radius: 3px; 
+        font-family: inherit; 
+        font-size: 12px; 
+      }
+      #prompt { margin-bottom: 40px; }
+    `;
+  }
+
   style.textContent = css;
   document.head.appendChild(style);
 }
@@ -239,10 +350,90 @@ function renderInput() {
   inputText.appendChild(caretSpan);
 
   inputText.appendChild(document.createTextNode(after));
+
+  // Update mobile input if it exists
+  const mobileInput = document.getElementById("mobile-input");
+  if (mobileInput) {
+    mobileInput.value = currentInput;
+  }
 }
 
-// Key handling (with copy & paste support)
+// Mobile input handling
+function setupMobileInput() {
+  if (!isMobile) return;
+
+  // Create mobile input helper
+  const mobileHelper = document.createElement("div");
+  mobileHelper.id = "mobile-input-helper";
+  
+  const mobileInput = document.createElement("input");
+  mobileInput.id = "mobile-input";
+  mobileInput.type = "text";
+  mobileInput.placeholder = "Type your message...";
+  
+  const sendBtn = document.createElement("button");
+  sendBtn.id = "mobile-send-btn";
+  sendBtn.textContent = "Send";
+  
+  mobileHelper.appendChild(mobileInput);
+  mobileHelper.appendChild(sendBtn);
+  document.body.appendChild(mobileHelper);
+
+  // Mobile input events
+  mobileInput.addEventListener("input", (e) => {
+    currentInput = e.target.value;
+    cursorIndex = currentInput.length;
+    renderInput();
+  });
+
+  mobileInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      sendMobileMessage();
+    }
+  });
+
+  sendBtn.addEventListener("click", sendMobileMessage);
+}
+
+function sendMobileMessage() {
+  const trimmed = currentInput.trim();
+  if (!trimmed) {
+    currentInput = "";
+    cursorIndex = 0;
+    renderInput();
+    return;
+  }
+
+  // Initialize audio on first interaction
+  initAudio();
+
+  commandHistory.push(trimmed);
+  historyIndex = commandHistory.length;
+
+  const nonChatCommands = ["join", "nick", "echo", "help", "clear", "autosay", "say", "theme", "gms", "uid", "updlog", "ping"];
+  if (gashAutoSay && !nonChatCommands.includes(trimmed.split(" ")[0].toLowerCase())) {
+    processCommand("say " + trimmed);
+  } else {
+    processCommand(trimmed);
+  }
+
+  currentInput = "";
+  cursorIndex = 0;
+  renderInput();
+
+  // Clear mobile input
+  const mobileInput = document.getElementById("mobile-input");
+  if (mobileInput) {
+    mobileInput.value = "";
+  }
+}
+
+// Enhanced key handling (desktop)
 document.addEventListener("keydown", async event => {
+  // Initialize audio on first keypress
+  if (!audioContext) initAudio();
+
   if (event.ctrlKey && event.key.toLowerCase() === "c") {
     event.preventDefault();
     try { await navigator.clipboard.writeText(currentInput); } catch (err) { console.error("Clipboard write failed", err); }
@@ -286,7 +477,7 @@ document.addEventListener("keydown", async event => {
     commandHistory.push(trimmed);
     historyIndex = commandHistory.length;
 
-    const nonChatCommands = ["join", "nick", "echo", "help", "clear", "autosay", "say", "theme", "gms", "uid", "updlog"];
+    const nonChatCommands = ["join", "nick", "echo", "help", "clear", "autosay", "say", "theme", "gms", "uid", "updlog", "ping"];
     if (gashAutoSay && !nonChatCommands.includes(trimmed.split(" ")[0].toLowerCase())) {
       processCommand("say " + trimmed);
     } else processCommand(trimmed);
@@ -299,11 +490,16 @@ document.addEventListener("keydown", async event => {
 async function restSendMessage(msg) {
   if (!gashRESTUrl) { addToConsole("> Error: REST not configured.", "error-output"); return; }
   const sanitizedMsg = sanitizeText(msg);
-  await fetch(gashRESTUrl + "/send", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user: gashNickname, msg: sanitizedMsg, userId: gashUserId })
-  });
+  try {
+    await fetch(gashRESTUrl + "/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user: gashNickname, msg: sanitizedMsg, userId: gashUserId })
+    });
+  } catch (e) {
+    addToConsole("> REST send error: " + sanitizeText(e.message), "error-output");
+    updateConnectionStatus(false);
+  }
 }
 
 function startRESTPolling() {
@@ -317,13 +513,21 @@ function startRESTPolling() {
       if (Array.isArray(msgs) && msgs.length > lastRestMsgCount) {
         msgs.slice(lastRestMsgCount).forEach(rawMsg => {
           const msg = validateMessage(rawMsg);
-          if (msg && msg.userId !== gashUserId) addToConsole(`> ${msg.user}: ${msg.msg}`, "command-output");
+          if (msg && msg.userId !== gashUserId) {
+            playPingSound();
+            addToConsole(`> ${msg.user}: ${msg.msg}`, "command-output");
+          }
         });
         lastRestMsgCount = msgs.length;
       }
-    } catch (e) { addToConsole("> REST polling error: " + sanitizeText(e.message), "error-output"); }
+      updateConnectionStatus(true);
+    } catch (e) { 
+      addToConsole("> REST polling error: " + sanitizeText(e.message), "error-output");
+      updateConnectionStatus(false);
+    }
   }, 2000);
   addToConsole("> 📡 REST polling started (every 2s)", "misc-output");
+  updateConnectionStatus(true);
 }
 
 // Command processor
@@ -353,6 +557,21 @@ function processCommand(command) {
     return;
   }
 
+  if (cmd === "ping") {
+    const setting = parts[1];
+    if (setting === "on") {
+      gashPingSoundEnabled = true;
+      addToConsole("> Ping sounds: ON", "command-output");
+    } else if (setting === "off") {
+      gashPingSoundEnabled = false;
+      addToConsole("> Ping sounds: OFF", "command-output");
+    } else {
+      playPingSound();
+      addToConsole(`> Ping sounds: ${gashPingSoundEnabled ? "ON" : "OFF"}`, "command-output");
+    }
+    return;
+  }
+
   if (cmd === "help") {
     addToConsole(`> Commands:
   - join {preset|url}        Connect to server
@@ -363,6 +582,7 @@ function processCommand(command) {
   - nick {name}              Set nickname
   - say {msg}                Send chat message
   - autosay on/off           Toggle auto-say
+  - ping [on/off]            Toggle/test ping sounds
   - theme {name}             Change theme (default/light/blue/red/purple/green/yellow/pink/midnight/abyss/sky)
   - echo {msg}               Print message
   - clear                    Clear console
@@ -375,9 +595,15 @@ function processCommand(command) {
   if (cmd === "updlog") {
     addToConsole(
       `> Update Log:
-  GMS 1.0.1-official
-- Fixed theme selection stayin green
-- added like 5 new themes
+  GMS 1.0.2-enhanced
+- Added mobile support with touch-friendly interface
+- Added ping sound notifications for incoming messages
+- Enhanced connection status indicator
+- Added Twemoji emoji support 🎉
+- Added ping command to test/toggle sounds
+- Improved mobile responsiveness
+- Fixed theme selection staying green
+- Added 5 new themes
 - Added updlog and uid command`,
       "misc-output"
     );
@@ -418,12 +644,18 @@ function processCommand(command) {
       try {
         gashWebSocket = new WebSocket(url);
         gashWebSocketUrl = url;
-        gashWebSocket.onopen = () => addToConsole(`> Connected to WebSocket: ${url}`, "command-output");
+        gashWebSocket.onopen = () => {
+          addToConsole(`> Connected to WebSocket: ${url}`, "command-output");
+          updateConnectionStatus(true);
+        };
         gashWebSocket.onmessage = e => {
           try {
             const rawMsg = JSON.parse(e.data);
             const msg = validateMessage(rawMsg);
-            if (msg && msg.userId !== gashUserId) addToConsole(`> ${msg.user}: ${msg.msg}`, "command-output");
+            if (msg && msg.userId !== gashUserId) {
+              playPingSound();
+              addToConsole(`> ${msg.user}: ${msg.msg}`, "command-output");
+            }
           } catch {
             addToConsole(`> WS: ${sanitizeText(e.data)}`, "misc-output");
           }
@@ -439,6 +671,7 @@ function processCommand(command) {
           addToConsole("> WebSocket closed.", "misc-output");
           gashWebSocket = null;
           gashWebSocketUrl = null;
+          updateConnectionStatus(false);
         };
       } catch (e) { addToConsole("> Error: " + sanitizeText(e.message), "error-output"); }
       return;
@@ -459,8 +692,16 @@ function processCommand(command) {
     }
 
     if (sub === "disconnect") {
-      if (gashWebSocket) { gashWebSocket.close(); addToConsole("> Closing WebSocket...", "misc-output"); }
-      if (gashUseREST && gashRESTPoller) { clearInterval(gashRESTPoller); addToConsole("> Stopped REST polling.", "misc-output"); gashUseREST = false; }
+      if (gashWebSocket) { 
+        gashWebSocket.close(); 
+        addToConsole("> Closing WebSocket...", "misc-output"); 
+      }
+      if (gashUseREST && gashRESTPoller) { 
+        clearInterval(gashRESTPoller); 
+        addToConsole("> Stopped REST polling.", "misc-output"); 
+        gashUseREST = false; 
+      }
+      updateConnectionStatus(false);
       return;
     }
 
@@ -493,20 +734,77 @@ function processCommand(command) {
   addToConsole("> Unknown command", "error-output");
 }
 
-// Console helper
+// Enhanced console helper with emoji support
 function addToConsole(text, cssClass = "command-output") {
   const div = document.createElement("div");
   div.className = cssClass;
-  div.textContent = text;
+  
+  // Process emojis first, then set content
+  const processedText = processEmojis(text);
+  if (processedText !== text && typeof twemoji !== 'undefined') {
+    div.innerHTML = processedText;
+  } else {
+    div.textContent = text;
+  }
+  
   consoleOutput.appendChild(div);
   consoleOutput.scrollTop = consoleOutput.scrollHeight;
+}
+
+// Handle page visibility changes to manage audio context
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && audioContext && audioContext.state === 'suspended') {
+    audioContext.resume();
+  }
+});
+
+// Touch event handling for mobile
+if (isMobile) {
+  // Prevent default touch behaviors that might interfere
+  document.addEventListener('touchstart', (e) => {
+    // Allow normal touch on input elements
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') {
+      return;
+    }
+  });
+
+  // Handle mobile scrolling
+  let touchStartY = 0;
+  consoleOutput.addEventListener('touchstart', (e) => {
+    touchStartY = e.touches[0].clientY;
+  });
+
+  consoleOutput.addEventListener('touchmove', (e) => {
+    e.preventDefault(); // Prevent body scroll
+    const touchY = e.touches[0].clientY;
+    const deltaY = touchStartY - touchY;
+    consoleOutput.scrollTop += deltaY;
+    touchStartY = touchY;
+  });
 }
 
 // Init
 function initGMS() {
   renderInput();
-  const savedTheme = localStorage.getItem("gmsTheme") || "default";
+  
+  // Load saved theme
+  let savedTheme = "default";
+  try {
+    savedTheme = localStorage.getItem("gmsTheme") || "default";
+  } catch (e) {
+    console.log("LocalStorage not available, using default theme");
+  }
+  
   applyTheme(savedTheme);
+  
+  // Setup mobile input if on mobile device
+  if (isMobile) {
+    setupMobileInput();
+    addToConsole("> 📱 Mobile interface enabled", "misc-output");
+  }
+  
+  // Initialize connection status
+  updateConnectionStatus(false);
 }
 
 if (document.readyState === "loading") {
