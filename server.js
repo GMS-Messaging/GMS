@@ -101,10 +101,19 @@ wss.on("connection", (ws) => {
 
 // ---- Routes ----
 
-// Admin: fetch ephemeral keys
+// Admin: fetch ephemeral keys (requires MASTER_KEY)
 app.get("/admin/keys", requireMasterKey, (req, res) => {
   console.log(`📥 Admin requested keys from ${req.ip}`);
   res.json(apiKeys);
+});
+
+// 🚨 Client-facing: safe key fetch (no master key)
+app.get("/client/keys", (req, res) => {
+  res.json({
+    messages: apiKeys.messages,
+    send: apiKeys.send
+    // not exposing "clear"
+  });
 });
 
 // Fetch messages
