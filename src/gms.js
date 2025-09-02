@@ -57,7 +57,8 @@ const availableThemes = {
   yellow: "theme-yellow",
   pink: "theme-pink",
   midnight: "theme-midnight",
-  abyss: "theme-abyss"
+  abyss: "theme-abyss",
+  sky: "theme-sky",
 };
 
 // Apply theme and save in localStorage
@@ -117,6 +118,29 @@ function applyThemeCSS(themeName) {
         ::selection{background-color: #1390FF; color: #b8b5fbff;}
       `;
       break;
+
+
+case 'sky':
+  css = `
+    .command-output { color: #1E90FF !important; }      /* Dodger Blue */
+    .error-output { color: #F66 !important; }          /* Red for errors */
+    .help-output { color: #0FF !important; }           /* Cyan for help */
+    .misc-output { color: #FFF !important; opacity:75%; }  /* White misc text */
+    .misc-urgent-output { color: #f55 !important; opacity:75%; } /* Red-ish urgent */
+    
+    #input-text, #caret { color: #FFFFFF !important; }  /* White input text */
+    #prompt { 
+      background: #1E90FF;   /* Dodger blue prompt background for contrast */
+      color: #FFFFFF; 
+      padding: 4px; 
+      border-top: 1px solid #223; 
+    }
+    
+    ::selection { background-color: #1390FF; color: #FFFFFF; } /* Selection styling */
+  `;
+  break;
+
+
 
     case 'red':
       css = `
@@ -339,7 +363,7 @@ function processCommand(command) {
   - nick {name}              Set nickname
   - say {msg}                Send chat message
   - autosay on/off           Toggle auto-say
-  - theme {name}             Change theme (default/light/blue/red/purple/green/yellow/pink/midnight/abyss)
+  - theme {name}             Change theme (default/light/blue/red/purple/green/yellow/pink/midnight/abyss/sky)
   - echo {msg}               Print message
   - clear                    Clear console
   - uid                      Prints your userId to the console. (no one will see.)
@@ -353,7 +377,7 @@ function processCommand(command) {
       `> Update Log:
   GMS 1.0.1-official
 - Fixed theme selection stayin green
-- added like 4 new themes
+- added like 5 new themes
 - Added updlog and uid command`,
       "misc-output"
     );
