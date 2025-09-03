@@ -362,24 +362,27 @@ function renderInput() {
 function setupMobileInput() {
   if (!isMobile) return;
 
-  // Create mobile input helper
   const mobileHelper = document.createElement("div");
   mobileHelper.id = "mobile-input-helper";
-  
+
   const mobileInput = document.createElement("input");
   mobileInput.id = "mobile-input";
   mobileInput.type = "text";
   mobileInput.placeholder = "Type your message...";
-  
+
   const sendBtn = document.createElement("button");
   sendBtn.id = "mobile-send-btn";
   sendBtn.textContent = "Send";
-  
+
   mobileHelper.appendChild(mobileInput);
   mobileHelper.appendChild(sendBtn);
   document.body.appendChild(mobileHelper);
 
-  // Mobile input events
+  // Auto-focus when console tapped
+  consoleOutput.addEventListener("touchstart", () => {
+    mobileInput.focus();
+  });
+
   mobileInput.addEventListener("input", (e) => {
     currentInput = e.target.value;
     cursorIndex = currentInput.length;
@@ -395,6 +398,7 @@ function setupMobileInput() {
 
   sendBtn.addEventListener("click", sendMobileMessage);
 }
+
 
 function sendMobileMessage() {
   const trimmed = currentInput.trim();
@@ -543,12 +547,24 @@ function processCommand(command) {
     return;
   }
 
-  if (cmd === "nick") {
-    const newNick = parts.slice(1).join(" ");
-    if (newNick) { gashNickname = sanitizeText(newNick); addToConsole(`> Nickname set to ${gashNickname}`, "command-output"); }
-    else addToConsole(`> Current nickname: ${gashNickname}`, "command-output");
-    return;
+if (cmd === "nick") {
+  const newNick = parts.slice(1).join(" ");
+  if (newNick) {
+    gashNickname = sanitizeText(newNick);
+    addToConsole(`> Nickname set to ${gashNickname}`, "command-output");
+    
+    // Save nickname
+    try {
+      localStorage.setItem("gmsNickname", gashNickname);
+    } catch (e) {
+      console.log("LocalStorage not available");
+    }
+  } else {
+    addToConsole(`> Current nickname: ${gashNickname}`, "command-output");
   }
+  return;
+}
+
 
   if (cmd === "echo") { addToConsole(`> ${sanitizeText(parts.slice(1).join(" "))}`, "command-output"); return; }
 
@@ -796,6 +812,16 @@ function initGMS() {
   }
   
   applyTheme(savedTheme);
+
+  // Load saved nickname
+  try {
+    gashNickname = localStorage.getItem("gmsNickname") || gashNickname;
+  } catch (e) {
+    console.log("LocalStorage not available, using default nickname");  
+  }
+  
+  addToConsole(`> Loaded Nickname: ${gashNickname}`, "misc-output");
+
   
   // Setup mobile input if on mobile device
   if (isMobile) {
@@ -805,6 +831,7 @@ function initGMS() {
   
   // Initialize connection status
   updateConnectionStatus(false);
+
 }
 
 if (document.readyState === "loading") {
