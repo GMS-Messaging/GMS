@@ -23,8 +23,8 @@ let gashCurrentTheme = "default";
 // New features
 let gashPingSoundEnabled = true;
 let isConnected = false;
-let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|OPR|Opera/i.test(navigator.userAgent);
-
+let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|OPR|Opera/i.test(navigator.userAgent)
+               || ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 // Mobile input handling
 let mobileInputBuffer = "";
 
