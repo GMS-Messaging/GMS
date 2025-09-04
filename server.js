@@ -4,6 +4,8 @@ const { WebSocketServer } = require("ws");
 const http = require("http");
 const cors = require("cors");
 
+print("hello from o-o-o ohio!")
+
 // Try to load node-cron
 let cron;
 try {
