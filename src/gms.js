@@ -514,12 +514,9 @@ function startRESTPolling() {
     try {
       const res = await fetch(gashRESTUrl + "/messages");
       const msgs = await res.json();
-
       if (Array.isArray(msgs) && msgs.length > lastRestMsgCount) {
         msgs.slice(lastRestMsgCount).forEach(rawMsg => {
           const msg = validateMessage(rawMsg);
-
-          // ✅ Skip my own messages
           if (msg && msg.userId !== gashUserId) {
             playPingSound();
             addToConsole(`> ${msg.user}: ${msg.msg}`, "command-output");
@@ -533,11 +530,9 @@ function startRESTPolling() {
       updateConnectionStatus(false);
     }
   }, 2000);
-
   addToConsole("> 📡 REST polling started (every 2s)", "misc-output");
   updateConnectionStatus(true);
 }
-
 
 // Command processor
 function processCommand(command) {
