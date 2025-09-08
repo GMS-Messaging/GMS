@@ -141,7 +141,6 @@ const availableThemes = {
   sky: "theme-sky",
   bloodshed: "theme-bloodshed",
   chocolate: "theme-chocolate",
-  toxin: "theme-toxin",
   oreo: "theme-oreo",
 };
 
@@ -315,46 +314,33 @@ function applyThemeCSS(themeName) {
         .misc-urgent-output { color: #490404 !important; opacity:75%; }
         #input-text, #caret { color: #7c0909 !important; }
         #prompt { background: #7f1010; color: #690d0d; padding:4px; border-top:1px solid #820808; }
-        ::selection{background-color: #02041d; color: #b8b5fbff;}
+        ::selection{background-color: #7c1b37; color: #6e0020;}
       `;
       break;
 
       case 'chocolate':
       css = `
-        .command-output { color: #080a45 !important; }   
-        .error-output { color: #0c0f55 !important; }     
-        .help-output { color: #181932 !important; }     
-        .misc-output { color: #212242 !important; opacity:75%; }
-        .misc-urgent-output { color: #1c215c !important; opacity:75%; }
-        #input-text, #caret { color: #141a5f !important; }
-        #prompt { background: #02041d; color: #1b2067; padding:4px; border-top:1px solid #660033; }
-        ::selection{background-color: #02041d; color: #b8b5fbff;}
-      `;
-      break;
-
-      case 'toxin':
-      css = `
-        .command-output { color: #080a45 !important; }   
-        .error-output { color: #0c0f55 !important; }     
-        .help-output { color: #181932 !important; }     
-        .misc-output { color: #212242 !important; opacity:75%; }
-        .misc-urgent-output { color: #1c215c !important; opacity:75%; }
-        #input-text, #caret { color: #141a5f !important; }
-        #prompt { background: #02041d; color: #1b2067; padding:4px; border-top:1px solid #660033; }
-        ::selection{background-color: #02041d; color: #b8b5fbff;}
+        .command-output { color: #5b2f01 !important; }   
+        .error-output { color: #070400 !important; }     
+        .help-output { color: #4f3519 !important; }     
+        .misc-output { color: #2c1803 !important; opacity:75%; }
+        .misc-urgent-output { color: #1e0f00 !important; opacity:75%; }
+        #input-text, #caret { color: #532f09 !important; }
+        #prompt { background: #301a02; color: #3e2b17; padding:4px; border-top:1px solid #472602; }
+        ::selection{background-color: #8d581f; color: #724719;}
       `;
       break;
 
       case 'oreo':
       css = `
-        .command-output { color: #080a45 !important; }   
-        .error-output { color: #0c0f55 !important; }     
-        .help-output { color: #181932 !important; }     
-        .misc-output { color: #212242 !important; opacity:75%; }
-        .misc-urgent-output { color: #1c215c !important; opacity:75%; }
-        #input-text, #caret { color: #141a5f !important; }
-        #prompt { background: #02041d; color: #1b2067; padding:4px; border-top:1px solid #660033; }
-        ::selection{background-color: #02041d; color: #b8b5fbff;}
+        .command-output { color: #ffffff !important; }   
+        .error-output { color: #ffffff !important; }     
+        .help-output { color: #ffffff !important; }     
+        .misc-output { color: #ffffff !important; opacity:75%; }
+        .misc-urgent-output { color: #ffffff !important; opacity:75%; }
+        #input-text, #caret { color: #ffffff !important; }
+        #prompt { background: #ffffff; color: #ffffff; padding:4px; border-top:1px solid #ffffff; }
+        ::selection{background-color: #2a2a2a; color: #535353;}
       `;
       break;
   }
@@ -667,7 +653,7 @@ if (cmd === "nick") {
   - say {msg}                Send chat message
   - autosay on/off           Toggle auto-say
   - ping [on/off]            Toggle/test ping sounds
-  - theme {name}             Change theme (default/light/blue/red/purple/green/yellow/pink/midnight/abyss/sky/bloodshed/chocolate/toxin/oreo)
+  - theme {name}             Change theme (default/light/blue/red/purple/green/yellow/pink/midnight/abyss/sky/bloodshed/chocolate/oreo)
   - echo {msg}               Print message
   - clear                    Clear console
   - uid                      Prints your userId to the console. (no one will see.)
