@@ -673,7 +673,7 @@ if (cmd === "nick") {
 - Added ping command to test/toggle sounds
 - Improved mobile responsiveness
 - Fixed theme selection staying green
-- Added 5 new themes
+- Added 8 new themes
 - Added updlog and uid command`,
       "misc-output"
     );
