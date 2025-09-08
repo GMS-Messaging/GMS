@@ -67,7 +67,6 @@ function playPingSound() {
 }
 
 // Update connection status
-// Update connection status
 function updateConnectionStatus(connected, viaREST = false) {
   isConnected = connected;
   const statusElement = document.getElementById("connection-status");
@@ -86,6 +85,7 @@ function updateConnectionStatus(connected, viaREST = false) {
     }
   }
 }
+
 
 
 // Safe text sanitization
@@ -124,7 +124,7 @@ function validateMessage(msg) {
 }
 
 // Join presets
-const joinPresets = { gms: "wss://gms-1-0.onrender.com" };
+const joinPresets = { gms: "wss://gms-1-0.onrender.com", gms-rest:"https://gms-1-0.onrender.com };
 
 // Available themes
 const availableThemes = {
