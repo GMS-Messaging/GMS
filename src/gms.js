@@ -124,7 +124,7 @@ function validateMessage(msg) {
 }
 
 // Join presets
-const joinPresets = { gms: "wss://gms-1-0.onrender.com", gms-rest: "https://gms-1-0.onrender.com" };
+const joinPresets = { gms: "wss://gms-1-0.onrender.com", gms_rest: "https://gms-1-0.onrender.com" };
 
 // Available themes
 const availableThemes = {
