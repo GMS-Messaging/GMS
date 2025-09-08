@@ -67,14 +67,26 @@ function playPingSound() {
 }
 
 // Update connection status
-function updateConnectionStatus(connected) {
+// Update connection status
+function updateConnectionStatus(connected, viaREST = false) {
   isConnected = connected;
   const statusElement = document.getElementById("connection-status");
   if (statusElement) {
-    statusElement.textContent = connected ? "● Connected" : "● Disconnected";
-    statusElement.className = connected ? "status-connected" : "status-disconnected";
+    if (connected) {
+      if (viaREST) {
+        statusElement.textContent = "● Connected, With REST";
+        statusElement.className = "status-rest"; // yellow
+      } else {
+        statusElement.textContent = "● Connected";
+        statusElement.className = "status-connected"; // green
+      }
+    } else {
+      statusElement.textContent = "● Disconnected";
+      statusElement.className = "status-disconnected"; // red
+    }
   }
 }
+
 
 // Safe text sanitization
 function sanitizeText(str) {
@@ -524,7 +536,7 @@ function startRESTPolling() {
         });
         lastRestMsgCount = msgs.length;
       }
-      updateConnectionStatus(true);
+      updateConnectionStatus(true, true);
     } catch (e) { 
       addToConsole("> REST polling error: " + sanitizeText(e.message), "error-output");
       updateConnectionStatus(false);
