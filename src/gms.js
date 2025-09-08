@@ -140,7 +140,7 @@ const availableThemes = {
   abyss: "theme-abyss",
   sky: "theme-sky",
   bloodshed: "theme-bloodshed",
-  chocolate: "theme-chocolate",
+  autumn: "theme-autumn",
   oreo: "theme-oreo",
 };
 
@@ -313,12 +313,12 @@ function applyThemeCSS(themeName) {
         .misc-output { color: #6e0e0e !important; opacity:75%; }
         .misc-urgent-output { color: #490404 !important; opacity:75%; }
         #input-text, #caret { color: #7c0909 !important; }
-        #prompt { background: #7f1010; color: #690d0d; padding:4px; border-top:1px solid #820808; }
+        #prompt { background: #450808; color: #690d0d; padding:4px; border-top:1px solid #820808; }
         ::selection{background-color: #7c1b37; color: #6e0020;}
       `;
       break;
 
-      case 'chocolate':
+      case 'autumn':
       css = `
         .command-output { color: #5b2f01 !important; }   
         .error-output { color: #070400 !important; }     
@@ -339,7 +339,7 @@ function applyThemeCSS(themeName) {
         .misc-output { color: #ffffff !important; opacity:75%; }
         .misc-urgent-output { color: #ffffff !important; opacity:75%; }
         #input-text, #caret { color: #ffffff !important; }
-        #prompt { background: #ffffff; color: #ffffff; padding:4px; border-top:1px solid #ffffff; }
+        #prompt { background: #000000; color: #ffffff; padding:4px; border-top:1px solid #ffffff; }
         ::selection{background-color: #2a2a2a; color: #535353;}
       `;
       break;
@@ -653,7 +653,7 @@ if (cmd === "nick") {
   - say {msg}                Send chat message
   - autosay on/off           Toggle auto-say
   - ping [on/off]            Toggle/test ping sounds
-  - theme {name}             Change theme (default/light/blue/red/purple/green/yellow/pink/midnight/abyss/sky/bloodshed/chocolate/oreo)
+  - theme {name}             Change theme (default/light/blue/red/purple/green/yellow/pink/midnight/abyss/sky/bloodshed/autumn/oreo)
   - echo {msg}               Print message
   - clear                    Clear console
   - uid                      Prints your userId to the console. (no one will see.)
