@@ -51,6 +51,7 @@ body {
 }
 .status-connected { color: #0F0; }
 .status-disconnected { color: #F33; }
+.status-rest { color: #ffcc00; }
 
 
 @keyframes blink { 50%{ opacity:0; } }
@@ -83,6 +84,7 @@ input,button,textarea {
 input:focus, button:focus, textarea:focus { border-color:#00FF00; }
 
 ::selection { background-color:#00FF00; color:black; }
+
 
 
 
