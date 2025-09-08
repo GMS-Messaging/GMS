@@ -543,7 +543,7 @@ function startRESTPolling() {
     }
   }, 2000);
   addToConsole("> 📡 REST polling started (every 2s)", "misc-output");
-  updateConnectionStatus(true);
+  updateConnectionStatus(true, true);
 }
 
 // Command processor
