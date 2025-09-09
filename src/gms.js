@@ -602,62 +602,60 @@ function processCommand(command) {
     return;
   }
 
-if (cmd === "upload") {
-  if (!isConnected) {
-    addToConsole("> Error: Not connected.", "error-output");
-    return;
-  }
+  if (cmd === "upload") {
+    const wsAvailable = gashWebSocket && gashWebSocket.readyState === WebSocket.OPEN;
+    const restAvailable = gashUseREST && gashRESTUrl;
 
-  // Create hidden file input
-  const fileInput = document.createElement("input");
-  fileInput.type = "file";
-  fileInput.accept = "image/*";
-  fileInput.style.display = "none";
+    if (!wsAvailable && !restAvailable) {
+      addToConsole("⚠️ You must be connected (WebSocket or REST) to upload.", "error-output");
+      return;
+    }
 
-  fileInput.onchange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const inputEl = document.createElement("input");
+    inputEl.type = "file";
+    inputEl.accept = "image/*";
+    inputEl.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = async function(ev) {
-      const base64Data = ev.target.result; // data:image/png;base64,...
+      const formData = new FormData();
+      formData.append("file", file);
 
-      // Message payload
-      const msgPayload = {
-        user: gashNickname,
-        msg: `<img src="${base64Data}" alt="upload" class="chat-image">`,
-        userId: gashUserId
-      };
+      try {
+        const uploadUrl = restAvailable ? gashRESTUrl + "/upload" : "/upload";
+        const res = await fetch(uploadUrl, { method: "POST", body: formData });
+        const data = await res.json();
 
-      if (gashUseREST) {
-        try {
+        if (!data.url) {
+          addToConsole("❌ Upload failed.", "error-output");
+          return;
+        }
+
+        const msgPayload = {
+          user: gashNickname,
+          msg: `<img src="${data.url}" alt="upload" class="chat-image">`
+        };
+
+        if (restAvailable) {
           await fetch(gashRESTUrl + "/send", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(msgPayload)
           });
-          addToConsole(`> [ME] ${gashNickname} (uploaded image)`, "command-output");
-        } catch (err) {
-          addToConsole("> REST upload error: " + sanitizeText(err.message), "error-output");
+        } else {
+          gashWebSocket.send(JSON.stringify(msgPayload));
         }
-      } else if (gashWebSocket && gashWebSocket.readyState === WebSocket.OPEN) {
-        gashWebSocket.send(JSON.stringify(msgPayload));
-        addToConsole(`> [ME] ${gashNickname} (uploaded image)`, "command-output");
-      } else {
-        addToConsole("> Error: Not connected.", "error-output");
+
+        addToConsole(`📷 Uploaded image: ${data.url}`, "misc-output");
+      } catch (err) {
+        addToConsole("❌ Upload error: " + err.message, "error-output");
       }
     };
+    inputEl.click();
 
-    reader.readAsDataURL(file);
-  };
+    return; // stop here, don't send to chat
+  }
 
-  // Trigger file picker
-  document.body.appendChild(fileInput);
-  fileInput.click();
-  fileInput.remove();
-
-  return;
-}
   
 if (cmd === "nick") {
   const newNick = parts.slice(1).join(" ");
@@ -753,28 +751,20 @@ if (cmd === "nick") {
     return;
   }
 
-  if (cmd === "users") {
-  if (gashUseREST) {
-    fetch(gashRESTUrl + "/users")
-      .then(res => res.json())
-      .then(data => {
-        if (typeof data.count !== "undefined") {
-          addToConsole(`> Users online: ${data.count}`, "command-output");
-        } else {
-          addToConsole("> Error: Invalid response from server", "error-output");
-        }
-      })
-      .catch(err => addToConsole("> Error fetching users: " + sanitizeText(err.message), "error-output"));
-  } else if (gashWebSocket && gashWebSocket.readyState === WebSocket.OPEN) {
-    // Ask the server for user count (you'll need server support)
-    gashWebSocket.send(JSON.stringify({ type: "users" }));
-  } else {
-    addToConsole("> Error: Not connected.", "error-output");
+    if (cmd === "users") {
+    if (gashWebSocket && gashWebSocket.readyState === WebSocket.OPEN) {
+      gashWebSocket.send(JSON.stringify({ type: "users" }));
+    } else if (gashUseREST && gashRESTUrl) {
+      fetch(gashRESTUrl + "/users")
+        .then(r => r.json())
+        .then(data => addToConsole(`👥 Users online: ${data.count}`, "misc-output"))
+        .catch(err => addToConsole("❌ Failed to get users: " + err.message, "error-output"));
+    } else {
+      addToConsole("⚠️ Not connected (WebSocket or REST).", "error-output");
+    }
+    return; // stop here, don't send to chat
   }
-  return;
-}
-
-
+  
   // GMS commands
   if (cmd === "gms") {
     const sub = parts[1];
