@@ -602,6 +602,63 @@ function processCommand(command) {
     return;
   }
 
+if (cmd === "upload") {
+  if (!isConnected) {
+    addToConsole("> Error: Not connected.", "error-output");
+    return;
+  }
+
+  // Create hidden file input
+  const fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.accept = "image/*";
+  fileInput.style.display = "none";
+
+  fileInput.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async function(ev) {
+      const base64Data = ev.target.result; // data:image/png;base64,...
+
+      // Message payload
+      const msgPayload = {
+        user: gashNickname,
+        msg: `<img src="${base64Data}" alt="upload" class="chat-image">`,
+        userId: gashUserId
+      };
+
+      if (gashUseREST) {
+        try {
+          await fetch(gashRESTUrl + "/send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(msgPayload)
+          });
+          addToConsole(`> [ME] ${gashNickname} (uploaded image)`, "command-output");
+        } catch (err) {
+          addToConsole("> REST upload error: " + sanitizeText(err.message), "error-output");
+        }
+      } else if (gashWebSocket && gashWebSocket.readyState === WebSocket.OPEN) {
+        gashWebSocket.send(JSON.stringify(msgPayload));
+        addToConsole(`> [ME] ${gashNickname} (uploaded image)`, "command-output");
+      } else {
+        addToConsole("> Error: Not connected.", "error-output");
+      }
+    };
+
+    reader.readAsDataURL(file);
+  };
+
+  // Trigger file picker
+  document.body.appendChild(fileInput);
+  fileInput.click();
+  fileInput.remove();
+
+  return;
+}
+  
 if (cmd === "nick") {
   const newNick = parts.slice(1).join(" ");
   if (newNick) {
