@@ -3,6 +3,9 @@ const express = require("express");
 const { WebSocketServer } = require("ws");
 const http = require("http");
 const cors = require("cors");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 
 console.log("hello from o-o-o ohio!");
 
@@ -22,6 +25,29 @@ const wss = new WebSocketServer({ server });
 app.use(cors());
 app.use(express.json());
 
+// ---- Upload handling ----
+const UPLOAD_DIR = "/tmp/uploads";
+fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+
+const upload = multer({ dest: UPLOAD_DIR });
+
+// File upload endpoint
+app.post("/upload", upload.single("file"), (req, res) => {
+  const ext = path.extname(req.file.originalname);
+  const newPath = path.join(UPLOAD_DIR, req.file.filename + ext);
+
+  fs.renameSync(req.file.path, newPath);
+
+  const url = `/uploads/${path.basename(newPath)}`;
+  console.log(`📷 File uploaded: ${url}`);
+
+  res.json({ url });
+});
+
+// Serve uploaded files
+app.use("/uploads", express.static(UPLOAD_DIR));
+
+// ---- In-memory state ----
 let messages = []; // Store chat history
 let connectedUsers = 0; // Track connected clients
 
@@ -30,7 +56,6 @@ wss.on("connection", (ws) => {
   connectedUsers++;
   console.log(`🔌 Client connected (${connectedUsers} online)`);
 
-  // Send welcome & recent history
   ws.send(JSON.stringify({ system: true, msg: "✅ Connected to GMS WebSocket" }));
   messages.forEach((m) => ws.send(JSON.stringify(m)));
 
@@ -38,7 +63,6 @@ wss.on("connection", (ws) => {
     try {
       const msg = JSON.parse(data.toString());
 
-      // Handle "users" request
       if (msg.type === "users") {
         ws.send(JSON.stringify({ type: "users", count: connectedUsers }));
         return;
@@ -49,7 +73,6 @@ wss.on("connection", (ws) => {
 
       messages.push(msg);
 
-      // Broadcast to all clients
       wss.clients.forEach((client) => {
         if (client.readyState === ws.OPEN) client.send(JSON.stringify(msg));
       });
@@ -91,28 +114,51 @@ app.post("/clear", (req, res) => {
     if (client.readyState === 1) client.send(JSON.stringify(clearMsg));
   });
 
-  res.json({ success: true, msg: "Chat history cleared" });
+  // Also clear uploads
+  try {
+    fs.rmSync(UPLOAD_DIR, { recursive: true, force: true });
+    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+    console.log("🖼️ Uploads cleared!");
+  } catch (err) {
+    console.error("❌ Failed to clear uploads:", err);
+  }
+
+  res.json({ success: true, msg: "Chat history + uploads cleared" });
 });
 
-// --- New: REST endpoint for users ---
 app.get("/users", (req, res) => {
   res.json({ count: connectedUsers });
 });
 
-// ---- Cron job: clear chat every day at 00:00 EST/EDT ----
+// ---- Cron job: clear chat + uploads at 00:00 EST/EDT ----
 if (cron) {
-  cron.schedule('0 0 * * *', () => {
-    messages = [];
-    console.log("🧹 Chat history automatically cleared at 00:00 EST/EDT!");
+  cron.schedule(
+    "0 0 * * *",
+    () => {
+      messages = [];
+      console.log("🧹 Chat history automatically cleared at 00:00 EST/EDT!");
 
-    const clearMsg = { system: true, msg: "🧹 Chat history automatically cleared (00:00 EST/EDT)." };
-    wss.clients.forEach(client => {
-      if (client.readyState === 1) client.send(JSON.stringify(clearMsg));
-    });
-  }, {
-    scheduled: true,
-    timezone: "America/New_York"
-  });
+      try {
+        fs.rmSync(UPLOAD_DIR, { recursive: true, force: true });
+        fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+        console.log("🖼️ Uploads cleared automatically!");
+      } catch (err) {
+        console.error("❌ Failed to clear uploads:", err);
+      }
+
+      const clearMsg = {
+        system: true,
+        msg: "🧹 Chat history + uploads automatically cleared (00:00 EST/EDT).",
+      };
+      wss.clients.forEach((client) => {
+        if (client.readyState === 1) client.send(JSON.stringify(clearMsg));
+      });
+    },
+    {
+      scheduled: true,
+      timezone: "America/New_York",
+    }
+  );
 }
 
 // ---- Start server ----
