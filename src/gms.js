@@ -653,10 +653,13 @@ function processCommand(command) {
                     return;
                 }
 
+                const mimeType = file.type || "image/png"; // fallback if MIME type not available
                 const msgPayload = {
-                    user: gashNickname,
-                    msg: `<img src="${data.base64}" alt="upload" class="chat-image">`
+                user: gashNickname,
+                msg: `<img src="data:${mimeType};base64,${data.base64}" alt="upload" class="chat-image">`
                 };
+
+
 
                 if (restAvailable) {
                     await fetch(gashRESTUrl + "/send", {
