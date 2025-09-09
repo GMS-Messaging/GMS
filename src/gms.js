@@ -93,8 +93,8 @@ function sanitizeText(str) {
   if (typeof str !== 'string') return '';
 
   return DOMPurify.sanitize(str, {
-    ALLOWED_TAGS: ['b', 'i', 'u', 'strong', 'em', 'img'],
-    ALLOWED_ATTR: ['src', 'alt']
+    ALLOWED_TAGS: ['b', 'i', 'u', 'strong', 'em', 'img','span'],
+    ALLOWED_ATTR: ['src', 'alt', 'class']
   });
 }
 
@@ -831,15 +831,14 @@ if (cmd === "nick") {
 function addToConsole(text, cssClass = "command-output") {
   const div = document.createElement("div");
   div.className = cssClass;
-  
-  // Process emojis first, then set content
-  const processedText = processEmojis(text);
-  if (processedText !== text && typeof twemoji !== 'undefined') {
-    div.innerHTML = processedText;
-  } else {
-    div.textContent = text;
-  }
-  
+
+  // Sanitize + process emojis
+  let processedText = processEmojis(text);
+  processedText = sanitizeText(processedText);
+
+  // Safe to insert as HTML now
+  div.innerHTML = processedText;
+
   consoleOutput.appendChild(div);
   consoleOutput.scrollTop = consoleOutput.scrollHeight;
 }
