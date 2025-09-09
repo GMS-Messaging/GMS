@@ -644,18 +644,18 @@ function processCommand(command) {
             formData.append("file", file);
 
             try {
-                const uploadUrl = restAvailable ? gashRESTUrl + "/upload" : "/upload";
+                const uploadUrl = restAvailable ? gashRESTUrl + "/upload-base64" : "/upload-base64";
                 const res = await fetch(uploadUrl, { method: "POST", body: formData });
                 const data = await res.json();
 
-                if (!data.url) {
+                if (!data.base64) {
                     addToConsole("❌ Upload failed.", "error-output");
                     return;
                 }
 
                 const msgPayload = {
                     user: gashNickname,
-                    msg: `<img src="${data.url}" alt="upload" class="chat-image">`
+                    msg: `<img src="${data.base64}" alt="upload" class="chat-image">`
                 };
 
                 if (restAvailable) {
@@ -668,7 +668,7 @@ function processCommand(command) {
                     gashWebSocket.send(JSON.stringify(msgPayload));
                 }
 
-                addToConsole(`📷 Uploaded image: ${data.url}`, "misc-output");
+                addToConsole(`📷 Uploaded image: ${data.base64}`, "misc-output");
             } catch (err) {
                 addToConsole("❌ Upload error: " + err.message, "error-output");
             }
