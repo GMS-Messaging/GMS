@@ -625,67 +625,70 @@ function processCommand(command) {
     }
 
     if (cmd === "upload") {
-        const wsAvailable = gashWebSocket && gashWebSocket.readyState === WebSocket.OPEN;
-        const restAvailable = gashUseREST && gashRESTUrl;
+    const wsAvailable = gashWebSocket && gashWebSocket.readyState === WebSocket.OPEN;
+    const restAvailable = gashUseREST && gashRESTUrl;
 
-        if (!wsAvailable && !restAvailable) {
-            addToConsole("⚠️ You must be connected (WebSocket or REST) to upload.", "error-output");
-            return;
+    if (!wsAvailable && !restAvailable) {
+        addToConsole("⚠️ You must be connected (WebSocket or REST) to upload.", "error-output");
+        return;
+    }
+
+    const inputEl = document.createElement("input");
+    inputEl.type = "file";
+    inputEl.accept = "image/*";
+    inputEl.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const uploadUrl = restAvailable ? gashRESTUrl + "/upload" : "/upload";
+            const res = await fetch(uploadUrl, { method: "POST", body: formData });
+            const data = await res.json();
+
+            if (!data.url) {
+                addToConsole("❌ Upload failed.", "error-output");
+                return;
+            }
+
+            // Make URL absolute if using REST
+            const baseUrl = gashRESTUrl.replace(/\/$/, '');
+            const path = data.url.startsWith('/') ? data.url : '/' + data.url;
+            const imageUrl = restAvailable ? baseUrl + path : data.url;
+
+            const msgPayload = {
+                user: gashNickname,
+                msg: `<img src="${imageUrl}" alt="upload" class="chat-image">`,
+                userId: gashUserId
+            };
+
+            // Send via REST or WS
+            if (restAvailable) {
+                await fetch(gashRESTUrl + "/send", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(msgPayload)
+                });
+            } else if (wsAvailable) {
+                gashWebSocket.send(JSON.stringify(msgPayload));
+            } else {
+                addToConsole("❌ Not connected, cannot send image.", "error-output");
+                return;
+            }
+
+            addToConsole(`📷 Uploaded image: ${imageUrl}`, "misc-output");
+
+        } catch (err) {
+            addToConsole("❌ Upload error: " + sanitizeText(err.message), "error-output");
         }
+    };
 
-        const inputEl = document.createElement("input");
-        inputEl.type = "file";
-        inputEl.accept = "image/*";
-        inputEl.onchange = async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const formData = new FormData();
-            formData.append("file", file);
-
-            try {
-                const uploadUrl = restAvailable ? gashRESTUrl + "/upload-base64" : "/upload-base64";
-                const res = await fetch(uploadUrl, { method: "POST", body: formData });
-                const data = await res.json();
-
-                if (!data.base64) {
-                    addToConsole("❌ Upload failed.", "error-output");
-                    return;
-                }
-
-                const mimeType = file.type || "image/png"; // fallback if MIME type not available
-              // Make URL absolute if using REST
-const imageUrl = restAvailable ? gashRESTUrl.replace(/\/$/, '') + data.url : data.url;
-
-const msgPayload = {
-    user: gashNickname,
-    msg: `<img src="${imageUrl}" alt="upload" class="chat-image">`,
-    userId: gashUserId
-};
-
-// Send via REST or WS
-if (restAvailable) {
-    await fetch(gashRESTUrl + "/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(msgPayload)
-    });
-} else if (gashWebSocket && gashWebSocket.readyState === WebSocket.OPEN) {
-    gashWebSocket.send(JSON.stringify(msgPayload));
-} else {
-    addToConsole("❌ Not connected, cannot send image.", "error-output");
+    inputEl.click();
+    return; // stop further processing
 }
 
-
-                addToConsole(`📷 Uploaded image: ${data.base64}`, "misc-output");
-            } catch (err) {
-                addToConsole("❌ Upload error: " + err.message, "error-output");
-            }
-        };
-        inputEl.click();
-
-        return; // stop here, don't send to chat
-    }
 
 
     if (cmd === "nick") {
