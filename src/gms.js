@@ -470,7 +470,7 @@ function sendMobileMessage() {
   commandHistory.push(trimmed);
   historyIndex = commandHistory.length;
 
-  const nonChatCommands = ["join", "nick", "echo", "help", "clear", "autosay", "say", "theme", "gms", "uid", "updlog", "ping", "users"];
+  const nonChatCommands = ["join", "nick", "echo", "help", "clear", "autosay", "say", "theme", "gms", "uid", "updlog", "ping"];
   if (gashAutoSay && !nonChatCommands.includes(trimmed.split(" ")[0].toLowerCase())) {
     processCommand("say " + trimmed);
   } else {
