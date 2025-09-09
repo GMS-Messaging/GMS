@@ -211,7 +211,7 @@ function applyThemeCSS(themeName) {
       css = `
         .command-output { color: #1E90FF !important; }
         .error-output { color: #F66 !important; }
-        .help-output { color: ##25A7DA !important; }
+        .help-output { color: #254dda !important; }
         .misc-output { color: #FFF !important; opacity:75%; }
         .misc-urgent-output { color: #f55 !important; opacity:75%; }
         
