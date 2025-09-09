@@ -654,22 +654,28 @@ function processCommand(command) {
                 }
 
                 const mimeType = file.type || "image/png"; // fallback if MIME type not available
-                const msgPayload = {
-                user: gashNickname,
-                msg: `<img src="data:${mimeType};base64,${data.base64}" alt="upload" class="chat-image">`
-                };
+              // Make URL absolute if using REST
+const imageUrl = restAvailable ? gashRESTUrl.replace(/\/$/, '') + data.url : data.url;
 
+const msgPayload = {
+    user: gashNickname,
+    msg: `<img src="${imageUrl}" alt="upload" class="chat-image">`,
+    userId: gashUserId
+};
 
+// Send via REST or WS
+if (restAvailable) {
+    await fetch(gashRESTUrl + "/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(msgPayload)
+    });
+} else if (gashWebSocket && gashWebSocket.readyState === WebSocket.OPEN) {
+    gashWebSocket.send(JSON.stringify(msgPayload));
+} else {
+    addToConsole("❌ Not connected, cannot send image.", "error-output");
+}
 
-                if (restAvailable) {
-                    await fetch(gashRESTUrl + "/send", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(msgPayload)
-                    });
-                } else {
-                    gashWebSocket.send(JSON.stringify(msgPayload));
-                }
 
                 addToConsole(`📷 Uploaded image: ${data.base64}`, "misc-output");
             } catch (err) {
