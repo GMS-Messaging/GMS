@@ -472,11 +472,19 @@ function sendMobileMessage() {
 
   // auto say exclusion basically
   const nonChatCommands = ["join", "nick", "echo", "help", "clear", "autosay", "say", "theme", "gms", "uid", "updlog", "ping","users","upload"];
-  if (gashAutoSay && !nonChatCommands.includes(trimmed.split(" ")[0].toLowerCase())) {
-    processCommand("say " + trimmed);
-  } else {
+const cmdName = trimmed.split(" ")[0].toLowerCase();
+const nonChatCommands = ["join", "nick", "echo", "help", "clear", "autosay", "say", "theme", "gms", "uid", "updlog", "ping","users","upload"];
+if (gashAutoSay && !nonChatCommands.includes(cmdName)) {
+  processCommand("say " + trimmed);
+} else {
+  // Special commands handled first; prevent sending to chat
+  if (!["users","upload"].includes(cmdName)) {
     processCommand(trimmed);
+  } else {
+    processCommand(trimmed); // processCommand will handle users/upload and stop
   }
+}
+
 
   currentInput = "";
   cursorIndex = 0;
@@ -538,13 +546,19 @@ document.addEventListener("keydown", async event => {
     historyIndex = commandHistory.length;
 
 const nonChatCommands = ["join", "nick", "echo", "help", "clear", "autosay", "say", "theme", "gms", "uid", "updlog", "ping","users","upload"];
-    if (gashAutoSay && !nonChatCommands.includes(trimmed.split(" ")[0].toLowerCase())) {
-      processCommand("say " + trimmed);
-    } else processCommand(trimmed);
+const cmdName = trimmed.split(" ")[0].toLowerCase();
 
-    currentInput = ""; cursorIndex = 0; renderInput();
+if (gashAutoSay && !nonChatCommands.includes(cmdName)) {
+  processCommand("say " + trimmed);
+} else {
+  // Directly handle users/upload via processCommand
+  if (["users", "upload"].includes(cmdName)) {
+    processCommand(trimmed); // handled separately
+  } else {
+    processCommand(trimmed); // normal commands
   }
-});
+}
+
 
 // REST helpers
 async function restSendMessage(msg) {
@@ -594,6 +608,10 @@ function startRESTPolling() {
 function processCommand(command) {
   const parts = command.split(" ");
   const cmd = parts[0];
+  const nonSendCommands = ["users","upload"];
+  if (nonSendCommands.includes(command.split(" ")[0].toLowerCase())) {
+    // Do nothing here; the command-specific block below will handle it
+  }
 
   if (cmd === "join") {
     const target = parts[1];
