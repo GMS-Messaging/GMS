@@ -4,7 +4,7 @@ const { WebSocketServer } = require("ws");
 const http = require("http");
 const cors = require("cors");
 
-console.log("hello from o-o-o ohio!")
+console.log("hello from o-o-o ohio!");
 
 // Try to load node-cron
 let cron;
@@ -23,10 +23,12 @@ app.use(cors());
 app.use(express.json());
 
 let messages = []; // Store chat history
+let connectedUsers = 0; // Track connected clients
 
 // ---- WebSocket handling ----
 wss.on("connection", (ws) => {
-  console.log("🔌 Client connected");
+  connectedUsers++;
+  console.log(`🔌 Client connected (${connectedUsers} online)`);
 
   // Send welcome & recent history
   ws.send(JSON.stringify({ system: true, msg: "✅ Connected to GMS WebSocket" }));
@@ -35,6 +37,12 @@ wss.on("connection", (ws) => {
   ws.on("message", (data) => {
     try {
       const msg = JSON.parse(data.toString());
+
+      // Handle "users" request
+      if (msg.type === "users") {
+        ws.send(JSON.stringify({ type: "users", count: connectedUsers }));
+        return;
+      }
 
       if (msg.user && msg.msg) console.log(`💬 [${msg.user}]: ${msg.msg}`);
       else console.log("📩 Raw:", msg);
@@ -50,7 +58,10 @@ wss.on("connection", (ws) => {
     }
   });
 
-  ws.on("close", () => console.log("🚪 Client disconnected"));
+  ws.on("close", () => {
+    connectedUsers--;
+    console.log(`🚪 Client disconnected (${connectedUsers} left)`);
+  });
 });
 
 // ---- REST endpoints ----
@@ -81,6 +92,11 @@ app.post("/clear", (req, res) => {
   });
 
   res.json({ success: true, msg: "Chat history cleared" });
+});
+
+// --- New: REST endpoint for users ---
+app.get("/users", (req, res) => {
+  res.json({ count: connectedUsers });
 });
 
 // ---- Cron job: clear chat every day at 00:00 EST/EDT ----

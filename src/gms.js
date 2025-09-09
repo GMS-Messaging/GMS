@@ -178,6 +178,7 @@ function applyThemeCSS(themeName) {
         .misc-urgent-output { color: #CC3333 !important; opacity:75%; }
         #input-text, #caret { color: #333 !important; }
         #prompt { background:#f0f0f0; color:#333; padding:4px; border-top:1px solid #ccc; }
+        ::selection{background-color: #212121ff; color: #cfcfcfff;}
       `;
       break;
 
@@ -469,7 +470,7 @@ function sendMobileMessage() {
   commandHistory.push(trimmed);
   historyIndex = commandHistory.length;
 
-  const nonChatCommands = ["join", "nick", "echo", "help", "clear", "autosay", "say", "theme", "gms", "uid", "updlog", "ping"];
+  const nonChatCommands = ["join", "nick", "echo", "help", "clear", "autosay", "say", "theme", "gms", "uid", "updlog", "ping", "users"];
   if (gashAutoSay && !nonChatCommands.includes(trimmed.split(" ")[0].toLowerCase())) {
     processCommand("say " + trimmed);
   } else {
@@ -694,6 +695,28 @@ if (cmd === "nick") {
     else addToConsole(`> Error: Unknown theme '${themeName}'`, "error-output");
     return;
   }
+
+  if (cmd === "users") {
+  if (gashUseREST) {
+    fetch(gashRESTUrl + "/users")
+      .then(res => res.json())
+      .then(data => {
+        if (typeof data.count !== "undefined") {
+          addToConsole(`> Users online: ${data.count}`, "command-output");
+        } else {
+          addToConsole("> Error: Invalid response from server", "error-output");
+        }
+      })
+      .catch(err => addToConsole("> Error fetching users: " + sanitizeText(err.message), "error-output"));
+  } else if (gashWebSocket && gashWebSocket.readyState === WebSocket.OPEN) {
+    // Ask the server for user count (you'll need server support)
+    gashWebSocket.send(JSON.stringify({ type: "users" }));
+  } else {
+    addToConsole("> Error: Not connected.", "error-output");
+  }
+  return;
+}
+
 
   // GMS commands
   if (cmd === "gms") {
