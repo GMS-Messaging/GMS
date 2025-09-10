@@ -28,18 +28,10 @@ app.use(express.json());
 // ---- Upload handling (temp dir) ----
 const UPLOAD_DIR = "/tmp/uploads";
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-
-const upload = multer({
-  dest: UPLOAD_DIR,
-  fileFilter: (req, file, cb) => {
-    const allowed = ["image/png", "image/jpeg", "image/gif", "image/webp"];
-    if (allowed.includes(file.mimetype)) cb(null, true);
-    else cb(new Error("Only images are allowed!"));
-  },
-});
+const upload = multer({ dest: UPLOAD_DIR });
 
 // ---- In-memory state ----
-let messages = [];             // Chat history
+let messages = [];            // Chat history
 const activeUsers = new Set(); // Track all active users (WS + REST)
 
 // ---- Helper ----
@@ -135,23 +127,14 @@ app.get("/users", (req, res) => {
 
 // ---- Base64 file upload ----
 app.post("/upload-base64", upload.single("file"), (req, res) => {
-  try {
-    const fileBuffer = fs.readFileSync(req.file.path);
-    let ext = path.extname(req.file.originalname).substring(1).toLowerCase();
+  const fileBuffer = fs.readFileSync(req.file.path);
+  const ext = path.extname(req.file.originalname).substring(1);
+  const base64Data = `data:image/${ext};base64,${fileBuffer.toString("base64")}`;
 
-    if (!["png", "jpg", "jpeg", "gif", "webp"].includes(ext)) {
-      ext = "png"; // fallback
-    }
+  fs.unlinkSync(req.file.path); // remove temp file
 
-    const base64Data = `data:image/${ext};base64,${fileBuffer.toString("base64")}`;
-    fs.unlinkSync(req.file.path); // cleanup temp file
-
-    console.log(`📷 File uploaded as base64 (${req.file.originalname}, type: ${ext})`);
-    res.json({ base64: base64Data, type: ext });
-  } catch (err) {
-    console.error("❌ Upload error:", err);
-    res.status(500).json({ error: "Upload failed" });
-  }
+  console.log(`📷 File uploaded as base64 (${req.file.originalname})`);
+  res.json({ base64: base64Data });
 });
 
 // ---- Cron job: clear chat + uploads at 00:00 EST/EDT ----
