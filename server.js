@@ -25,13 +25,18 @@ const wss = new WebSocketServer({ server });
 app.use(cors());
 app.use(express.json());
 
-// ---- Upload handling ----
+// ---- Upload handling (temp dir) ----
 const UPLOAD_DIR = "/tmp/uploads";
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-const upload = multer({ dest: UPLOAD_DIR });
 
-// Serve uploaded files
-app.use("/uploads", express.static(UPLOAD_DIR));
+const upload = multer({
+  dest: UPLOAD_DIR,
+  fileFilter: (req, file, cb) => {
+    const allowed = ["image/png", "image/jpeg", "image/gif", "image/webp"];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error("Only images are allowed!"));
+  },
+});
 
 // ---- In-memory state ----
 let messages = [];             // Chat history
@@ -89,7 +94,7 @@ app.post("/send", (req, res) => {
   const newMsg = { user, msg };
   messages.push(newMsg);
 
-  // Track REST user by name
+  // Track REST user
   activeUsers.add(user);
 
   wss.clients.forEach(client => {
@@ -128,18 +133,25 @@ app.get("/users", (req, res) => {
   res.json({ count: activeUsers.size });
 });
 
-// ---- File upload → return URL ----
-app.post("/upload", upload.single("file"), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+// ---- Base64 file upload ----
+app.post("/upload-base64", upload.single("file"), (req, res) => {
+  try {
+    const fileBuffer = fs.readFileSync(req.file.path);
+    let ext = path.extname(req.file.originalname).substring(1).toLowerCase();
 
-  const fileUrl = `/uploads/${req.file.filename}${path.extname(req.file.originalname)}`;
-  const newPath = path.join(UPLOAD_DIR, `${req.file.filename}${path.extname(req.file.originalname)}`);
+    if (!["png", "jpg", "jpeg", "gif", "webp"].includes(ext)) {
+      ext = "png"; // fallback
+    }
 
-  // Rename file so extension is preserved
-  fs.renameSync(req.file.path, newPath);
+    const base64Data = `data:image/${ext};base64,${fileBuffer.toString("base64")}`;
+    fs.unlinkSync(req.file.path); // cleanup temp file
 
-  console.log(`📷 File uploaded: ${req.file.originalname} → ${fileUrl}`);
-  res.json({ url: fileUrl });
+    console.log(`📷 File uploaded as base64 (${req.file.originalname}, type: ${ext})`);
+    res.json({ base64: base64Data, type: ext });
+  } catch (err) {
+    console.error("❌ Upload error:", err);
+    res.status(500).json({ error: "Upload failed" });
+  }
 });
 
 // ---- Cron job: clear chat + uploads at 00:00 EST/EDT ----
