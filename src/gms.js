@@ -654,9 +654,12 @@ function processCommand(command) {
             }
 
             // Make URL absolute if using REST
-            const baseUrl = gashRESTUrl.replace(/\/$/, '');
+            const mime = req.file.mimetype; // e.g. image/png, image/gif, image/jpeg
+            const base64Data = `data:${mime};base64,${fileBuffer.toString("base64")}`;
+
             const path = data.url.startsWith('/') ? data.url : '/' + data.url;
             const imageUrl = restAvailable ? baseUrl + path : data.url;
+            
 
             const msgPayload = {
                 user: gashNickname,
