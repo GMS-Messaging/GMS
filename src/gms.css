@@ -84,9 +84,21 @@ input,button,textarea {
   outline:none;
   font-family:'Lexend', monospace;
 }
+
+.chat-image {
+  max-width: 200px;   /* never wider than 200px */
+  max-height: 200px;  /* never taller than 200px */
+  width: auto;        /* shrink/grow proportionally */
+  height: auto;
+  object-fit: contain; /* keep aspect ratio inside the box */
+  border-radius: 8px; /* optional */
+  display: block;     /* so margins apply cleanly */
+}
+
 input:focus, button:focus, textarea:focus { border-color:#00FF00; }
 
 ::selection { background-color:#00FF00; color:black; }
+
 
 
 
