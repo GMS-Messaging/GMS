@@ -28,7 +28,25 @@ app.use(express.json());
 // ---- Upload handling ----
 const UPLOAD_DIR = "/tmp/uploads";
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-const upload = multer({ dest: UPLOAD_DIR });
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`);
+  },
+});
+
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image files are allowed!"), false);
+    }
+  },
+});
 
 // Serve uploaded files
 app.use("/uploads", express.static(UPLOAD_DIR));
@@ -130,14 +148,11 @@ app.get("/users", (req, res) => {
 
 // ---- File upload → return URL ----
 app.post("/upload", upload.single("file"), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+  if (!req.file) {
+    return res.status(400).json({ error: "No file uploaded or invalid file type" });
+  }
 
-  const fileUrl = `/uploads/${req.file.filename}${path.extname(req.file.originalname)}`;
-  const newPath = path.join(UPLOAD_DIR, `${req.file.filename}${path.extname(req.file.originalname)}`);
-
-  // Rename file so extension is preserved
-  fs.renameSync(req.file.path, newPath);
-
+  const fileUrl = `/uploads/${req.file.filename}`;
   console.log(`📷 File uploaded: ${req.file.originalname} → ${fileUrl}`);
   res.json({ url: fileUrl });
 });
