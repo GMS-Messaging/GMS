@@ -744,10 +744,12 @@ function processCommand(command) {
   - autosay on/off           Toggle auto-say
   - ping [on/off]            Toggle/test ping sounds
   - theme {name}             Change theme (default/light/blue/red/purple/green/yellow/pink/midnight/abyss/sky/bloodshed/autumn/oreo)
+  - upload                   Allows you to upload image files (png, jpeg, webp(ew), and get this. GIF.)
   - echo {msg}               Print message
   - clear                    Clear console
   - uid                      Prints your userId to the console. (no one will see.)
   - updlog                   Shows GMS update logs
+  - users                    Show how many is connected
   - help                     Show this help`, "help-output");
         return;
     }
@@ -755,16 +757,13 @@ function processCommand(command) {
     if (cmd === "updlog") {
         addToConsole(
             `> Update Log:
-  GMS 1.0.2-enhanced
+  GMS 1.1
 - Added mobile support with touch-friendly interface
-- Added ping sound notifications for incoming messages
-- Enhanced connection status indicator
-- Added Twemoji emoji support 🎉
-- Added ping command to test/toggle sounds
-- Improved mobile responsiveness
-- Fixed theme selection staying green
-- Added 8 new themes
-- Added updlog and uid command`,
+- Added a buncha themes
+- users command (shows how many are connected)
+- upload command IMAGE SHARING WOOOOOOOO!
+- text sanitization less strict
+- shoutout to vodder for the themes!`,
             "misc-output"
         );
         return;
