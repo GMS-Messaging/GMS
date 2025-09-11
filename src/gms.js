@@ -141,6 +141,7 @@ const availableThemes = {
     bloodshed: "theme-bloodshed",
     autumn: "theme-autumn",
     oreo: "theme-oreo",
+    classic: "theme-classic
 };
 
 // Apply theme and save in localStorage
@@ -182,6 +183,16 @@ function applyThemeCSS(themeName) {
             break;
 
         case 'default': case 'green':
+            css = `
+        .command-output { color: #0F0 !important; }
+        .error-output { color: red !important; }
+        .help-output { color: #0FF !important; }
+        .misc-output { color: #9e9e9e !important; opacity:75%; }
+        .misc-urgent-output { color: #f55 !important; opacity:75%; }
+        #input-text, #caret { color: #0F0 !important; }
+        #prompt { background:#000; color:#0F0; padding:4px; border-top:1px solid #333; }
+      `;
+                case 'classic':
             css = `
         .command-output { color: #0F0 !important; }
         .error-output { color: red !important; }
