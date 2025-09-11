@@ -35,6 +35,8 @@ Commands:
   - nick {name}              Set your nickname
   - say {msg}                Send a chat message
   - autosay on/off           Toggle auto-say mode
+  - upload                   upload images!
+  - users                    see how many are on!
     - **autosay allows you to NOT have to type say {msg} everytime! on by default too!**
   - theme {name}             Change theme (default/light/blue/red/purple/green/yellow/pink/midnight)
   - echo {msg}               Print message
