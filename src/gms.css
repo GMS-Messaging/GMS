@@ -124,7 +124,7 @@ body {
   color: #00FF00;
 }
 
-.theme-classic {
+.theme-classic * {
   background-color: black;
   color: #00FF00;
   font-family: 'Courier New', monospace;
@@ -231,4 +231,5 @@ textarea:focus {
   background-color: #00FF00;
   color: black;
 }
+
 
