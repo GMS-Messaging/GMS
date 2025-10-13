@@ -986,7 +986,7 @@ function addToConsole(text, cssClass = "command-output") {
     safeText = decodeHTMLEntities(safeText);
 
     // 3. Process markdown
-    safeText = parseMarkdown(safeText);
+    safeText = processMarkdown(safeText);
 
     // 4. Replace emojis using Twemoji if available
     if (typeof twemoji !== 'undefined') {
