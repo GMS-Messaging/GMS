@@ -771,15 +771,15 @@ function processCommand(command) {
     if (cmd === "updlog") {
         addToConsole(
             `> Update Log:
-  GMS 1.1
+    GMS 1.1
 - Added mobile support with touch-friendly interface
 - Added a buncha themes
 - users command (shows how many are connected)
 - upload command IMAGE SHARING WOOOOOOOO!
 - text sanitization less strict
 - shoutout to vodder for the themes!
-  GMS 1.1.1
-- added markdown!`,
+    GMS 1.1.1
+- added merkdawn`,
             "misc-output"
         );
         return;
@@ -961,21 +961,32 @@ function addToConsole(text, cssClass = "command-output") {
     const div = document.createElement("div");
     div.className = cssClass;
 
-    // Process emojis first
-    let processedText = processEmojis(text);
+    // Step 1: Sanitize text first
+    const sanitizeText = str =>
+        str.replace(/&/g, "&amp;")
+           .replace(/</g, "&lt;")
+           .replace(/>/g, "&gt;")
+           .replace(/"/g, "&quot;")
+           .replace(/'/g, "&#39;");
 
-    // Sanitize text to prevent injection
-    processedText = sanitizeText(processedText);
+    let safeText = sanitizeText(text);
 
-    // Apply markdown formatting (after sanitization)
-    processedText = parseMarkdown(processedText);
+    // Step 2: Process markdown (your existing function)
+    safeText = processMarkdown(safeText);
 
-    // Safe to insert as HTML now
-    div.innerHTML = processedText;
+    // Step 3: Replace emojis (Twemoji)
+    const processEmojis = str =>
+        str.replace(/([\u231A-\uD83E\uDDFF])/g, match =>
+            `<img src="https://twemoji.maxcdn.com/v/14.0.2/16x16/${match.codePointAt(0).toString(16)}.png" alt="${match}" class="emoji">`
+        );
 
+    safeText = processEmojis(safeText);
+
+    div.innerHTML = safeText;
     consoleOutput.appendChild(div);
     consoleOutput.scrollTop = consoleOutput.scrollHeight;
 }
+
 
 // Handle page visibility changes to manage audio context
 document.addEventListener('visibilitychange', () => {
