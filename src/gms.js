@@ -935,7 +935,6 @@ function processMarkdown(text) {
 
   // Bold (**bold** or __bold__)
   text = text.replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
-  text = text.replace(/__(.*?)__/g, "<b>$1</b>");
 
   // Italic (*italic* or _italic_)
   text = text.replace(/(?<!\*)\*(?!\*)(.*?)\*(?!\*)/g, "<i>$1</i>");
