@@ -115,7 +115,7 @@ app.post("/send", (req, res) => {
   });
 
   res.json({ success: true });
-  console.log(`💬 [${msg.user}]: ${msg.msg}`)
+  console.log(`💬[REST] [${user}]: ${msg}`)
 });
 
 // Get all messages
