@@ -921,14 +921,52 @@ function processCommand(command) {
     addToConsole("> Unknown command", "error-output");
 }
 
+function parseMarkdown(text) {
+  // Escape HTML first
+  text = text.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+  // Code blocks (```code```)
+  text = text.replace(/```([\s\S]*?)```/g, (_, code) => `<pre><code>${code}</code></pre>`);
+
+  // Inline code (`code`)
+  text = text.replace(/`([^`]+)`/g, (_, code) => `<code>${code}</code>`);
+
+  // Bold (**bold** or __bold__)
+  text = text.replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
+  text = text.replace(/__(.*?)__/g, "<b>$1</b>");
+
+  // Italic (*italic* or _italic_)
+  text = text.replace(/(?<!\*)\*(?!\*)(.*?)\*(?!\*)/g, "<i>$1</i>");
+  text = text.replace(/(?<!_)_(?!_)(.*?)_(?!_)/g, "<i>$1</i>");
+
+  // Strikethrough (~~text~~)
+  text = text.replace(/~~(.*?)~~/g, "<s>$1</s>");
+
+  // Underline (__underline__)
+  text = text.replace(/__(.*?)__/g, "<u>$1</u>");
+
+  // Spoilers (||spoiler||)
+  text = text.replace(/\|\|(.*?)\|\|/g, "<span class='spoiler'>$1</span>");
+
+  // Links ([text](url))
+  text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s]+)\)/g, `<a href="$2" target="_blank">$1</a>`);
+  return text;
+}
+
+        
 // Enhanced console helper with emoji support
 function addToConsole(text, cssClass = "command-output") {
     const div = document.createElement("div");
     div.className = cssClass;
 
-    // Sanitize + process emojis
+    // Process emojis first
     let processedText = processEmojis(text);
+
+    // Sanitize text to prevent injection
     processedText = sanitizeText(processedText);
+
+    // Apply markdown formatting (after sanitization)
+    processedText = parseMarkdown(processedText);
 
     // Safe to insert as HTML now
     div.innerHTML = processedText;
