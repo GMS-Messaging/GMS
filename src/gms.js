@@ -955,13 +955,19 @@ function processMarkdown(text) {
   return text;
 }
 
-        
-// Enhanced console helper with proper Twemoji support
+function decodeHTMLEntities(str) {
+    const txt = document.createElement("textarea");
+    txt.innerHTML = str;
+    return txt.value;
+}
+
+
+// heh. stuff
 function addToConsole(text, cssClass = "command-output") {
     const div = document.createElement("div");
     div.className = cssClass;
 
-    // Step 1: Sanitize text first
+    // 1. Sanitize text (basic escape)
     const sanitizeText = str =>
         str.replace(/&/g, "&amp;")
            .replace(/</g, "&lt;")
@@ -971,22 +977,36 @@ function addToConsole(text, cssClass = "command-output") {
 
     let safeText = sanitizeText(text);
 
-    // Step 2: Process markdown (your existing parser)
-    safeText = processMarkdown(safeText);
+    // 2. Decode HTML entities (so &gt; becomes >)
+    const decodeHTMLEntities = str => {
+        const txt = document.createElement("textarea");
+        txt.innerHTML = str;
+        return txt.value;
+    };
+    safeText = decodeHTMLEntities(safeText);
 
-    // Step 3: Use Twemoji for all emojis
+    // 3. Process markdown
+    safeText = parseMarkdown(safeText);
+
+    // 4. Replace emojis using Twemoji if available
     if (typeof twemoji !== 'undefined') {
         safeText = twemoji.parse(safeText, {
             folder: '16x16',
             ext: '.png',
             base: 'https://twemoji.maxcdn.com/v/latest/'
         });
+    } else {
+        // fallback: replace some emojis manually
+        safeText = safeText.replace(/([\u231A-\uD83E\uDDFF])/g, match =>
+            `<span>${match}</span>`
+        );
     }
 
     div.innerHTML = safeText;
     consoleOutput.appendChild(div);
     consoleOutput.scrollTop = consoleOutput.scrollHeight;
 }
+
 
 
 
