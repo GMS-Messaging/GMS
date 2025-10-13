@@ -7,6 +7,22 @@
   box-sizing: border-box;
 }
 
+.spoiler {
+  background: #444;
+  color: transparent;
+  border-radius: 3px;
+  padding: 0 4px;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.spoiler:hover {
+  color: #fff;
+  background: #666;
+}
+
+
 body {
   background-color: black;
   color: white;
@@ -231,5 +247,6 @@ textarea:focus {
   background-color: #00FF00;
   color: black;
 }
+
 
 
