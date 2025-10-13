@@ -962,49 +962,37 @@ function decodeHTMLEntities(str) {
 
 
 // heh. stuff
+
 function addToConsole(text, cssClass = "command-output") {
     const div = document.createElement("div");
     div.className = cssClass;
 
-    // 1. Sanitize text (basic escape)
-    const sanitizeText = str =>
-        str.replace(/&/g, "&amp;")
-           .replace(/</g, "&lt;")
-           .replace(/>/g, "&gt;")
-           .replace(/"/g, "&quot;")
-           .replace(/'/g, "&#39;");
+    // 1. Sanitize text (allows certain tags including img)
+    let safeText = DOMPurify.sanitize(text, {
+        ALLOWED_TAGS: ['b', 'i', 'u', 'strong', 'em', 'img', 'span', 'a'],
+        ALLOWED_ATTR: ['src', 'alt', 'class', 'href', 'target']
+    });
 
-    let safeText = sanitizeText(text);
-
-    // 2. Decode HTML entities (so &gt; becomes >)
-    const decodeHTMLEntities = str => {
-        const txt = document.createElement("textarea");
-        txt.innerHTML = str;
-        return txt.value;
-    };
-    safeText = decodeHTMLEntities(safeText);
-
-    // 3. Process markdown
+    // 2. Process markdown (convert **bold**, *italic*, etc. to HTML)
     safeText = processMarkdown(safeText);
 
-    // 4. Replace emojis using Twemoji if available
+    // 3. Parse emojis using Twemoji
     if (typeof twemoji !== 'undefined') {
         safeText = twemoji.parse(safeText, {
             folder: '16x16',
             ext: '.png',
             base: 'https://twemoji.maxcdn.com/v/latest/'
         });
-    } else {
-        // fallback: replace some emojis manually
-        safeText = safeText.replace(/([\u231A-\uD83E\uDDFF])/g, match =>
-            `<span>${match}</span>`
-        );
     }
 
+    // 4. Set the sanitized + processed HTML
     div.innerHTML = safeText;
+
+    // 5. Append to console and scroll to bottom
     consoleOutput.appendChild(div);
     consoleOutput.scrollTop = consoleOutput.scrollHeight;
 }
+
 
 
 
