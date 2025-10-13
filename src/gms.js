@@ -956,7 +956,7 @@ function processMarkdown(text) {
 }
 
         
-// Enhanced console helper with emoji support
+// Enhanced console helper with proper Twemoji support
 function addToConsole(text, cssClass = "command-output") {
     const div = document.createElement("div");
     div.className = cssClass;
@@ -971,21 +971,23 @@ function addToConsole(text, cssClass = "command-output") {
 
     let safeText = sanitizeText(text);
 
-    // Step 2: Process markdown (your existing function)
+    // Step 2: Process markdown (your existing parser)
     safeText = processMarkdown(safeText);
 
-    // Step 3: Replace emojis (Twemoji)
-    const processEmojis = str =>
-        str.replace(/([\u231A-\uD83E\uDDFF])/g, match =>
-            `<img src="https://twemoji.maxcdn.com/v/14.0.2/16x16/${match.codePointAt(0).toString(16)}.png" alt="${match}" class="emoji">`
-        );
-
-    safeText = processEmojis(safeText);
+    // Step 3: Use Twemoji for all emojis
+    if (typeof twemoji !== 'undefined') {
+        safeText = twemoji.parse(safeText, {
+            folder: '16x16',
+            ext: '.png',
+            base: 'https://twemoji.maxcdn.com/v/latest/'
+        });
+    }
 
     div.innerHTML = safeText;
     consoleOutput.appendChild(div);
     consoleOutput.scrollTop = consoleOutput.scrollHeight;
 }
+
 
 
 // Handle page visibility changes to manage audio context
