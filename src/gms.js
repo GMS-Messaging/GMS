@@ -967,29 +967,29 @@ function addToConsole(text, cssClass = "command-output") {
     const div = document.createElement("div");
     div.className = cssClass;
 
-    // 1. Sanitize text with DOMPurify
-    //    Allow basic formatting + <img>
-    const safeText = DOMPurify.sanitize(text, {
-        ALLOWED_TAGS: ['b', 'i', 'u', 'strong', 'em', 'img', 'span'],
-        ALLOWED_ATTR: ['src', 'alt', 'class']
-    });
+    // 1. Process markdown first
+    let htmlText = processMarkdown(text);
 
-    // 2. Optional: process markdown (bold, italics, etc.)
-    let finalText = processMarkdown(safeText);
-
-    // 3. Replace emojis using Twemoji if available
+    // 2. Replace emojis using Twemoji
     if (typeof twemoji !== 'undefined') {
-        finalText = twemoji.parse(finalText, {
+        htmlText = twemoji.parse(htmlText, {
             folder: '16x16',
             ext: '.png',
             base: 'https://twemoji.maxcdn.com/v/latest/'
         });
     }
 
-    div.innerHTML = finalText;
+    // 3. Sanitize final HTML, allow <img>
+    const safeHTML = DOMPurify.sanitize(htmlText, {
+        ALLOWED_TAGS: ['b', 'i', 'u', 'strong', 'em', 'img', 'span'],
+        ALLOWED_ATTR: ['src', 'alt', 'class']
+    });
+
+    div.innerHTML = safeHTML;
     consoleOutput.appendChild(div);
     consoleOutput.scrollTop = consoleOutput.scrollHeight;
 }
+
 
 
 
