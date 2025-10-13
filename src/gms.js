@@ -923,7 +923,7 @@ function processCommand(command) {
     addToConsole("> Unknown command", "error-output");
 }
 
-function parseMarkdown(text) {
+function processMarkdown(text) {
   // Escape HTML first
   text = text.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
 
