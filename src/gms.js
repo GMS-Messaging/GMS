@@ -777,7 +777,9 @@ function processCommand(command) {
 - users command (shows how many are connected)
 - upload command IMAGE SHARING WOOOOOOOO!
 - text sanitization less strict
-- shoutout to vodder for the themes!`,
+- shoutout to vodder for the themes!
+  GMS 1.1.1
+- added markdown!`,
             "misc-output"
         );
         return;
