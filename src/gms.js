@@ -966,29 +966,20 @@ function decodeHTMLEntities(str) {
 
 // heh. stuff
 
-function addToConsole(content, sender = "System") {
-  const consoleEl = document.getElementById("console");
-  if (!consoleEl) return;
+function addToConsole(text, cssClass = "command-output") {
+    const div = document.createElement("div");
+    div.className = cssClass;
 
-  // Sanitize input (keeps <img> safe)
-  const safeContent = sanitizeText(content);
+    let processedText = processEmojis(text);
 
-  const entry = document.createElement("div");
-  entry.className = "console-entry";
+    processedText = processMarkdown(processedText);
 
-  // Use innerHTML so <img> and other tags render
-  entry.innerHTML = `<strong>[${sender}]</strong>: ${safeContent}`;
+    processedText = sanitizeText(processedText);
+    div.innerHTML = processedText;
 
-  consoleEl.appendChild(entry);
-  consoleEl.scrollTop = consoleEl.scrollHeight;
+    consoleOutput.appendChild(div);
+    consoleOutput.scrollTop = consoleOutput.scrollHeight;
 }
-
-
-
-
-
-
-
 
 // Handle page visibility changes to manage audio context
 document.addEventListener('visibilitychange', () => {
