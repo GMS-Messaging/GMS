@@ -967,12 +967,11 @@ function addToConsole(text, cssClass = "command-output") {
     const div = document.createElement("div");
     div.className = cssClass;
 
+    // Sanitize + process emojis
     let processedText = processEmojis(text);
-
-    processedText = processMarkdown(processedText);
-
     processedText = sanitizeText(processedText);
 
+    // Safe to insert as HTML now
     div.innerHTML = processedText;
 
     consoleOutput.appendChild(div);
