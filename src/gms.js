@@ -484,7 +484,7 @@ function sendMobileMessage() {
     historyIndex = commandHistory.length;
 
     // auto say exclusion basically
-    const nonChatCommands = ["join", "nick", "echo", "help", "clear", "autosay", "say", "theme", "gms", "uid", "updlog", "ping", "users", "upload"];
+    const nonChatCommands = ["join", "nick", "echo", "help", "clear", "autosay", "say", "theme", "gms", "uid", "updlog", "ping", "users", "upload","term enable","term disable"];
     const cmdName = trimmed.split(" ")[0].toLowerCase();
 
     if (gashAutoSay && !nonChatCommands.includes(cmdName)) {
@@ -559,7 +559,7 @@ document.addEventListener("keydown", async event => {
         commandHistory.push(trimmed);
         historyIndex = commandHistory.length;
 
-        const nonChatCommands = ["join", "nick", "echo", "help", "clear", "autosay", "say", "theme", "gms", "uid", "updlog", "ping", "users", "upload"];
+        const nonChatCommands = ["join", "nick", "echo", "help", "clear", "autosay", "say", "theme", "gms", "uid", "updlog", "ping", "users", "upload","term enable","term disable"];
         const cmdName = trimmed.split(" ")[0].toLowerCase();
 
         if (gashAutoSay && !nonChatCommands.includes(cmdName)) {
@@ -730,6 +730,12 @@ function processCommand(command) {
         addToConsole(`> User ID: ${gashUserId}`, "command-output");
         return;
     }
+
+if (cmd === "term enable") {
+    EZTerm.enable();
+} else if (cmd === "term disable") {
+    EZTerm.disable();
+}
 
     if (cmd === "ping") {
         const setting = parts[1];
