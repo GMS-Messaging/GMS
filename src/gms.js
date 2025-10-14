@@ -966,32 +966,23 @@ function decodeHTMLEntities(str) {
 
 // heh. stuff
 
-function addToConsole(text, cssClass = "command-output") {
-    const div = document.createElement("div");
-    div.className = cssClass;
+function addToConsole(content, sender = "System") {
+  const consoleEl = document.getElementById("console");
+  if (!consoleEl) return;
 
-    // 1. Process markdown first
-    let htmlText = processMarkdown(text);
+  // Sanitize input (keeps <img> safe)
+  const safeContent = sanitizeText(content);
 
-    // 2. Replace emojis using Twemoji
-    if (typeof twemoji !== 'undefined') {
-        htmlText = twemoji.parse(htmlText, {
-            folder: '16x16',
-            ext: '.png',
-            base: 'https://twemoji.maxcdn.com/v/latest/'
-        });
-    }
+  const entry = document.createElement("div");
+  entry.className = "console-entry";
 
-    // 3. Sanitize final HTML, allow <img>
-    const safeHTML = DOMPurify.sanitize(htmlText, {
-        ALLOWED_TAGS: ['b', 'i', 'u', 'strong', 'em', 'img', 'span'],
-        ALLOWED_ATTR: ['src', 'alt', 'class']
-    });
+  // Use innerHTML so <img> and other tags render
+  entry.innerHTML = `<strong>[${sender}]</strong>: ${safeContent}`;
 
-    div.innerHTML = safeHTML;
-    consoleOutput.appendChild(div);
-    consoleOutput.scrollTop = consoleOutput.scrollHeight;
+  consoleEl.appendChild(entry);
+  consoleEl.scrollTop = consoleEl.scrollHeight;
 }
+
 
 
 
