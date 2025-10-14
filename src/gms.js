@@ -924,9 +924,6 @@ function processCommand(command) {
 }
 
 function processMarkdown(text) {
-  // Escape HTML first
-  text = text.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
-
   // Code blocks (```code```)
   text = text.replace(/```([\s\S]*?)```/g, (_, code) => `<pre><code>${code}</code></pre>`);
 
@@ -967,11 +964,16 @@ function addToConsole(text, cssClass = "command-output") {
     const div = document.createElement("div");
     div.className = cssClass;
 
-    // Sanitize + process emojis
+    // 1️⃣ Process emojis first
     let processedText = processEmojis(text);
+
+    // 2️⃣ Convert markdown to HTML (adds <img>, <b>, <i>, <a>, etc.)
+    processedText = processMarkdown(processedText);
+
+    // 3️⃣ Sanitize HTML (keeps allowed tags, blocks XSS)
     processedText = sanitizeText(processedText);
 
-    // Safe to insert as HTML now
+    // 4️⃣ Render safely as HTML
     div.innerHTML = processedText;
 
     consoleOutput.appendChild(div);
