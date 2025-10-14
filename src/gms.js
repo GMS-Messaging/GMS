@@ -114,13 +114,10 @@ function validateMessage(msg) {
     if (!msg.user || !msg.msg) return null;
     if (typeof msg.user !== 'string' || typeof msg.msg !== 'string') return null;
     if (msg.user.trim() === '' || msg.msg.trim() === '') return null;
-    if (msg.user.length > 50 || msg.msg.length > 5000) return null;
+    if (msg.user.length > 50 || msg.msg.length > 1000) return null;
     return {
         user: sanitizeText(msg.user),
-        msg: DOMPurify.sanitize(msg.msg, {
-            ALLOWED_TAGS: ['b', 'i', 'u', 'strong', 'em', 'img', 'span', 's', 'code', 'pre', 'a'],
-            ALLOWED_ATTR: ['src', 'alt', 'class', 'href', 'target']
-        }),
+        msg: sanitizeText(msg.msg),
         userId: msg.userId || null
     };
 }
@@ -972,12 +969,16 @@ function addToConsole(text, cssClass = "command-output") {
 
     let processedText = processEmojis(text);
 
+    processedText = processMarkdown(processedText);
+
     processedText = sanitizeText(processedText);
+
     div.innerHTML = processedText;
 
     consoleOutput.appendChild(div);
     consoleOutput.scrollTop = consoleOutput.scrollHeight;
 }
+
 
 // Handle page visibility changes to manage audio context
 document.addEventListener('visibilitychange', () => {
