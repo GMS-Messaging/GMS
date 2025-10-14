@@ -972,8 +972,6 @@ function addToConsole(text, cssClass = "command-output") {
 
     let processedText = processEmojis(text);
 
-    processedText = processMarkdown(processedText);
-
     processedText = sanitizeText(processedText);
     div.innerHTML = processedText;
 
