@@ -107,8 +107,8 @@ function processEmojis(text) {
     // 2️⃣ Convert Unicode emojis → Twemoji <img> tags for consistent display
     if (typeof twemoji !== 'undefined') {
         text = twemoji.parse(text, {
-            folder: '16x16', // or '72x72' if you prefer PNGs
-            ext: '.png'
+            folder: 'svg', // or '72x72' if you prefer PNGs
+            ext: '.svg'
         });
     }
 
