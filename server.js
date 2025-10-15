@@ -101,22 +101,22 @@ wss.on("connection", (ws) => {
 
 // Send chat message
 app.post("/send", (req, res) => {
-  const { user, msg } = req.body;
+  const { user, msg, userId } = req.body;
   if (!user || !msg) return res.status(400).json({ error: "Missing user or msg" });
 
-  const newMsg = { user, msg };
+  const newMsg = { user, msg, userId };  // ✅ keep sender id
   messages.push(newMsg);
 
-  // Track REST user by name
-  activeUsers.add(user);
+  activeUsers.add(userId || user); // track unique identifier
 
   wss.clients.forEach(client => {
     if (client.readyState === 1) client.send(JSON.stringify(newMsg));
   });
 
   res.json({ success: true });
-  console.log(`💬[REST] [${user}]: ${msg}`)
+  console.log(`💬[REST] [${user}]: ${msg}`);
 });
+
 
 // Get all messages
 app.get("/messages", (req, res) => res.json(messages));
