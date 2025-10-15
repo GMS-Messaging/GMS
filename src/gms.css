@@ -137,7 +137,8 @@ body {
 
 .theme-default {
   background-color: black;
-  color: #00FF00;
+  color: #fff;
+  font-family: 'Lexend', sans-serif;
 }
 
 .theme-classic * {
@@ -247,6 +248,7 @@ textarea:focus {
   background-color: #00FF00;
   color: black;
 }
+
 
 
 
