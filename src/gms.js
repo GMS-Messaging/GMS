@@ -562,8 +562,14 @@ document.addEventListener("keydown", async event => {
     renderInput();
 
     if (event.key === "Enter") {
+        event.preventDefault();  // STOP the browser from doing its thing
         const trimmed = currentInput.trim();
-        if (!trimmed) { currentInput = ""; cursorIndex = 0; renderInput(); return; }
+        if (!trimmed) { 
+            currentInput = ""; 
+            cursorIndex = 0; 
+            renderInput(); 
+            return; 
+        }
 
         commandHistory.push(trimmed);
         historyIndex = commandHistory.length;
@@ -577,9 +583,9 @@ document.addEventListener("keydown", async event => {
         }
 
         // Display instantly
-        addToConsole(`[${username}]: ${localMsg}`);
+        addToConsole(`[${gashNickname}]: ${localMsg}`);
 
-        // Send raw input to server (server will also emojify safely)
+        // Send to server
         if (gashAutoSay && !nonChatCommands.includes(cmdName)) {
             processCommand("say " + trimmed);
         } else {
@@ -589,6 +595,7 @@ document.addEventListener("keydown", async event => {
         currentInput = "";
         cursorIndex = 0;
         renderInput();
+        return;
     }
 
 });
