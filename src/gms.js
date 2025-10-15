@@ -581,10 +581,6 @@ document.addEventListener("keydown", async event => {
     if (typeof emojione !== "undefined") {
         localMsg = emojione.shortnameToUnicode(trimmed);
     }
-
-    // Display instantly on client
-    addToConsole(`[${gashNickname}]: ${localMsg}`);
-
     if (gashAutoSay && !nonChatCommands.includes(cmdName)) {
         processCommand("say " + trimmed);
     } else {
