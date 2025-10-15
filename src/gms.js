@@ -561,28 +561,36 @@ document.addEventListener("keydown", async event => {
 
     renderInput();
 
-    if (event.key === "Enter") {
-        const trimmed = currentInput.trim();
-        if (!trimmed) { currentInput = ""; cursorIndex = 0; renderInput(); return; }
-        commandHistory.push(trimmed);
-        historyIndex = commandHistory.length;
+if (event.key === "Enter") {
+    const trimmed = currentInput.trim();
+    if (!trimmed) { currentInput = ""; cursorIndex = 0; renderInput(); return; }
 
-        const nonChatCommands = ["join", "nick", "echo", "help", "clear", "autosay", "say", "theme", "gms", "uid", "updlog", "ping", "users", "upload","term enable","term disable"];
-        const cmdName = trimmed.split(" ")[0].toLowerCase();
+    commandHistory.push(trimmed);
+    historyIndex = commandHistory.length;
 
-        if (gashAutoSay && !nonChatCommands.includes(cmdName)) {
-            processCommand("say " + trimmed);
-        } else {
-            if (!["users", "upload"].includes(cmdName)) {
-                processCommand(trimmed);
-            } else {
-                processCommand(trimmed);
-            }
-        }
+    const cmdName = trimmed.split(" ")[0].toLowerCase();
 
-        currentInput = ""; cursorIndex = 0; renderInput();
+    // Convert :shortcodes: → Unicode emojis immediately
+    let localMsg = trimmed;
+    if (typeof emojione !== "undefined") {
+        localMsg = emojione.shortnameToUnicode(trimmed);
     }
-});
+
+    // Display instantly
+    addToConsole(`[${username}]: ${localMsg}`);
+
+    // Send raw input to server (server will also emojify safely)
+    if (gashAutoSay && !nonChatCommands.includes(cmdName)) {
+        processCommand("say " + trimmed);
+    } else {
+        processCommand(trimmed);
+    }
+
+    currentInput = "";
+    cursorIndex = 0;
+    renderInput();
+}
+
 
 
 // REST helpers
