@@ -200,8 +200,8 @@ function applyThemeCSS(themeName) {
         #input-text, #caret { color: #0F0 !important; }
         #prompt { background:#000; color:#0F0; padding:4px; border-top:1px solid #333; }
       `;
-case 'classic':
-  css = `
+        case 'classic':
+            css = `
     .command-output { color: #0F0 !important; }
     .error-output { color: red !important; }
     .help-output { color: #0FF !important; }
@@ -211,7 +211,7 @@ case 'classic':
     #prompt { background:#000; color:#0F0; padding:4px; border-top:1px solid #333; }
     body { font-family: "Courier New", monospace; color: #fff }
   `;
-  break;
+            break;
 
             break;
 
@@ -492,7 +492,7 @@ function sendMobileMessage() {
     historyIndex = commandHistory.length;
 
     // auto say exclusion basically
-    const nonChatCommands = ["join", "nick", "echo", "help", "clear", "autosay", "say", "theme", "gms", "uid", "updlog", "ping", "users", "upload","term enable","term disable"];
+    const nonChatCommands = ["join", "nick", "echo", "help", "clear", "autosay", "say", "theme", "gms", "uid", "updlog", "ping", "users", "upload", "term enable", "term disable"];
     const cmdName = trimmed.split(" ")[0].toLowerCase();
 
     if (gashAutoSay && !nonChatCommands.includes(cmdName)) {
@@ -561,215 +561,217 @@ document.addEventListener("keydown", async event => {
 
     renderInput();
 
-if (event.key === "Enter") {
-    const trimmed = currentInput.trim();
-    if (!trimmed) { currentInput = ""; cursorIndex = 0; renderInput(); return; }
+    if (event.key === "Enter") {
+        const trimmed = currentInput.trim();
+        if (!trimmed) { currentInput = ""; cursorIndex = 0; renderInput(); return; }
 
-    commandHistory.push(trimmed);
-    historyIndex = commandHistory.length;
+        commandHistory.push(trimmed);
+        historyIndex = commandHistory.length;
 
-    const cmdName = trimmed.split(" ")[0].toLowerCase();
+        const cmdName = trimmed.split(" ")[0].toLowerCase();
 
-    // Convert :shortcodes: → Unicode emojis immediately
-    let localMsg = trimmed;
-    if (typeof emojione !== "undefined") {
-        localMsg = emojione.shortnameToUnicode(trimmed);
+        // Convert :shortcodes: → Unicode emojis immediately
+        let localMsg = trimmed;
+        if (typeof emojione !== "undefined") {
+            localMsg = emojione.shortnameToUnicode(trimmed);
+        }
+
+        // Display instantly
+        addToConsole(`[${username}]: ${localMsg}`);
+
+        // Send raw input to server (server will also emojify safely)
+        if (gashAutoSay && !nonChatCommands.includes(cmdName)) {
+            processCommand("say " + trimmed);
+        } else {
+            processCommand(trimmed);
+        }
+
+        currentInput = "";
+        cursorIndex = 0;
+        renderInput();
     }
 
-    // Display instantly
-    addToConsole(`[${username}]: ${localMsg}`);
-
-    // Send raw input to server (server will also emojify safely)
-    if (gashAutoSay && !nonChatCommands.includes(cmdName)) {
-        processCommand("say " + trimmed);
-    } else {
-        processCommand(trimmed);
-    }
-
-    currentInput = "";
-    cursorIndex = 0;
-    renderInput();
-}
+});
 
 
 
-// REST helpers
-async function restSendMessage(msg) {
-    if (!gashRESTUrl) { addToConsole("> Error: REST not configured.", "error-output"); return; }
-    const sanitizedMsg = sanitizeText(msg);
-    try {
-        await fetch(gashRESTUrl + "/send", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ user: gashNickname, msg: sanitizedMsg, userId: gashUserId })
-        });
-    } catch (e) {
-        addToConsole("> REST send error: " + sanitizeText(e.message), "error-output");
-        updateConnectionStatus(false);
-    }
-}
-
-function startRESTPolling() {
-    if (!gashRESTUrl) return;
-    if (gashRESTPoller) clearInterval(gashRESTPoller);
-
-    gashRESTPoller = setInterval(async () => {
+    // REST helpers
+    async function restSendMessage(msg) {
+        if (!gashRESTUrl) { addToConsole("> Error: REST not configured.", "error-output"); return; }
+        const sanitizedMsg = sanitizeText(msg);
         try {
-            const res = await fetch(gashRESTUrl + "/messages");
-            const msgs = await res.json();
-            if (Array.isArray(msgs) && msgs.length > lastRestMsgCount) {
-                msgs.slice(lastRestMsgCount).forEach(rawMsg => {
-                    const msg = validateMessage(rawMsg);
-                    if (msg && msg.userId !== gashUserId) {
-                        playPingSound();
-                        addToConsole(`> ${msg.user}: ${msg.msg}`, "command-output");
-                    }
-                });
-                lastRestMsgCount = msgs.length;
-            }
-            updateConnectionStatus(true, true);
+            await fetch(gashRESTUrl + "/send", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ user: gashNickname, msg: sanitizedMsg, userId: gashUserId })
+            });
         } catch (e) {
-            addToConsole("> REST polling error: " + sanitizeText(e.message), "error-output");
+            addToConsole("> REST send error: " + sanitizeText(e.message), "error-output");
             updateConnectionStatus(false);
         }
-    }, 2000);
-    addToConsole("> 📡 REST polling started (every 2s)", "misc-output");
-    updateConnectionStatus(true, true);
-}
-
-// Command processor
-function processCommand(command) {
-    const parts = command.split(" ");
-    const cmd = parts[0];
-    const nonSendCommands = ["users", "upload"];
-    if (nonSendCommands.includes(command.split(" ")[0].toLowerCase())) {
-        // Do nothing here; the command-specific block below will handle it
     }
 
-    if (cmd === "join") {
-        const target = parts[1];
-        if (!target) return addToConsole("> Error: Missing server/preset name", "error-output");
-        const url = joinPresets[target] || target;
-        processCommand(`gms connect ${url}`);
-        return;
+    function startRESTPolling() {
+        if (!gashRESTUrl) return;
+        if (gashRESTPoller) clearInterval(gashRESTPoller);
+
+        gashRESTPoller = setInterval(async () => {
+            try {
+                const res = await fetch(gashRESTUrl + "/messages");
+                const msgs = await res.json();
+                if (Array.isArray(msgs) && msgs.length > lastRestMsgCount) {
+                    msgs.slice(lastRestMsgCount).forEach(rawMsg => {
+                        const msg = validateMessage(rawMsg);
+                        if (msg && msg.userId !== gashUserId) {
+                            playPingSound();
+                            addToConsole(`> ${msg.user}: ${msg.msg}`, "command-output");
+                        }
+                    });
+                    lastRestMsgCount = msgs.length;
+                }
+                updateConnectionStatus(true, true);
+            } catch (e) {
+                addToConsole("> REST polling error: " + sanitizeText(e.message), "error-output");
+                updateConnectionStatus(false);
+            }
+        }, 2000);
+        addToConsole("> 📡 REST polling started (every 2s)", "misc-output");
+        updateConnectionStatus(true, true);
     }
 
-    if (cmd === "upload") {
-    const wsAvailable = gashWebSocket && gashWebSocket.readyState === WebSocket.OPEN;
-    const restAvailable = gashUseREST && gashRESTUrl;
+    // Command processor
+    function processCommand(command) {
+        const parts = command.split(" ");
+        const cmd = parts[0];
+        const nonSendCommands = ["users", "upload"];
+        if (nonSendCommands.includes(command.split(" ")[0].toLowerCase())) {
+            // Do nothing here; the command-specific block below will handle it
+        }
 
-    if (!wsAvailable && !restAvailable) {
-        addToConsole("⚠️ You must be connected (WebSocket or REST) to upload.", "error-output");
-        return;
-    }
+        if (cmd === "join") {
+            const target = parts[1];
+            if (!target) return addToConsole("> Error: Missing server/preset name", "error-output");
+            const url = joinPresets[target] || target;
+            processCommand(`gms connect ${url}`);
+            return;
+        }
 
-    const inputEl = document.createElement("input");
-    inputEl.type = "file";
-    inputEl.accept = "image/*";
-    inputEl.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+        if (cmd === "upload") {
+            const wsAvailable = gashWebSocket && gashWebSocket.readyState === WebSocket.OPEN;
+            const restAvailable = gashUseREST && gashRESTUrl;
 
-        const formData = new FormData();
-        formData.append("file", file);
-
-        try {
-            const uploadUrl = restAvailable ? gashRESTUrl + "/upload" : "/upload";
-            const res = await fetch(uploadUrl, { method: "POST", body: formData });
-            const data = await res.json();
-
-            if (!data.url) {
-                addToConsole("❌ Upload failed.", "error-output");
+            if (!wsAvailable && !restAvailable) {
+                addToConsole("⚠️ You must be connected (WebSocket or REST) to upload.", "error-output");
                 return;
             }
 
-            // Make URL absolute if using REST
-            const baseUrl = gashRESTUrl.replace(/\/$/, '');
-            const path = data.url.startsWith('/') ? data.url : '/' + data.url;
-            const imageUrl = restAvailable ? baseUrl + path : data.url;
+            const inputEl = document.createElement("input");
+            inputEl.type = "file";
+            inputEl.accept = "image/*";
+            inputEl.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
 
-            const msgPayload = {
-                user: gashNickname,
-                msg: `<img src="${imageUrl}" alt="upload" class="chat-image">`,
-                userId: gashUserId
+                const formData = new FormData();
+                formData.append("file", file);
+
+                try {
+                    const uploadUrl = restAvailable ? gashRESTUrl + "/upload" : "/upload";
+                    const res = await fetch(uploadUrl, { method: "POST", body: formData });
+                    const data = await res.json();
+
+                    if (!data.url) {
+                        addToConsole("❌ Upload failed.", "error-output");
+                        return;
+                    }
+
+                    // Make URL absolute if using REST
+                    const baseUrl = gashRESTUrl.replace(/\/$/, '');
+                    const path = data.url.startsWith('/') ? data.url : '/' + data.url;
+                    const imageUrl = restAvailable ? baseUrl + path : data.url;
+
+                    const msgPayload = {
+                        user: gashNickname,
+                        msg: `<img src="${imageUrl}" alt="upload" class="chat-image">`,
+                        userId: gashUserId
+                    };
+
+                    // Send via REST or WS
+                    if (restAvailable) {
+                        await fetch(gashRESTUrl + "/send", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(msgPayload)
+                        });
+                    } else if (wsAvailable) {
+                        gashWebSocket.send(JSON.stringify(msgPayload));
+                    } else {
+                        addToConsole("❌ Not connected, cannot send image.", "error-output");
+                        return;
+                    }
+
+                    addToConsole(`📷 Uploaded image: ${imageUrl}`, "misc-output");
+
+                } catch (err) {
+                    addToConsole("❌ Upload error: " + sanitizeText(err.message), "error-output");
+                }
             };
 
-            // Send via REST or WS
-            if (restAvailable) {
-                await fetch(gashRESTUrl + "/send", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(msgPayload)
-                });
-            } else if (wsAvailable) {
-                gashWebSocket.send(JSON.stringify(msgPayload));
+            inputEl.click();
+            return; // stop further processing
+        }
+
+
+
+        if (cmd === "nick") {
+            const newNick = parts.slice(1).join(" ");
+            if (newNick) {
+                gashNickname = sanitizeText(newNick);
+                addToConsole(`> Nickname set to ${gashNickname}`, "command-output");
+
+                // Save nickname
+                try {
+                    localStorage.setItem("gmsNickname", gashNickname);
+                } catch (e) {
+                    console.log("LocalStorage not available");
+                }
             } else {
-                addToConsole("❌ Not connected, cannot send image.", "error-output");
-                return;
+                addToConsole(`> Current nickname: ${gashNickname}`, "command-output");
             }
-
-            addToConsole(`📷 Uploaded image: ${imageUrl}`, "misc-output");
-
-        } catch (err) {
-            addToConsole("❌ Upload error: " + sanitizeText(err.message), "error-output");
+            return;
         }
-    };
-
-    inputEl.click();
-    return; // stop further processing
-}
 
 
+        if (cmd === "echo") { addToConsole(`> ${sanitizeText(parts.slice(1).join(" "))}`, "command-output"); return; }
 
-    if (cmd === "nick") {
-        const newNick = parts.slice(1).join(" ");
-        if (newNick) {
-            gashNickname = sanitizeText(newNick);
-            addToConsole(`> Nickname set to ${gashNickname}`, "command-output");
+        if (cmd === "uid") {
+            addToConsole(`> User ID: ${gashUserId}`, "command-output");
+            return;
+        }
 
-            // Save nickname
-            try {
-                localStorage.setItem("gmsNickname", gashNickname);
-            } catch (e) {
-                console.log("LocalStorage not available");
+        if (cmd === "term enable") {
+            EZTerm.enable();
+        } else if (cmd === "term disable") {
+            EZTerm.disable();
+        }
+
+        if (cmd === "ping") {
+            const setting = parts[1];
+            if (setting === "on") {
+                gashPingSoundEnabled = true;
+                addToConsole("> Ping sounds: ON", "command-output");
+            } else if (setting === "off") {
+                gashPingSoundEnabled = false;
+                addToConsole("> Ping sounds: OFF", "command-output");
+            } else {
+                playPingSound();
+                addToConsole(`> Ping sounds: ${gashPingSoundEnabled ? "ON" : "OFF"}`, "command-output");
             }
-        } else {
-            addToConsole(`> Current nickname: ${gashNickname}`, "command-output");
+            return;
         }
-        return;
-    }
 
-
-    if (cmd === "echo") { addToConsole(`> ${sanitizeText(parts.slice(1).join(" "))}`, "command-output"); return; }
-
-    if (cmd === "uid") {
-        addToConsole(`> User ID: ${gashUserId}`, "command-output");
-        return;
-    }
-
-if (cmd === "term enable") {
-    EZTerm.enable();
-} else if (cmd === "term disable") {
-    EZTerm.disable();
-}
-
-    if (cmd === "ping") {
-        const setting = parts[1];
-        if (setting === "on") {
-            gashPingSoundEnabled = true;
-            addToConsole("> Ping sounds: ON", "command-output");
-        } else if (setting === "off") {
-            gashPingSoundEnabled = false;
-            addToConsole("> Ping sounds: OFF", "command-output");
-        } else {
-            playPingSound();
-            addToConsole(`> Ping sounds: ${gashPingSoundEnabled ? "ON" : "OFF"}`, "command-output");
-        }
-        return;
-    }
-
-    if (cmd === "help") {
-        addToConsole(`> Commands:
+        if (cmd === "help") {
+            addToConsole(`> Commands:
   - join {preset|url}        Connect to server
   - gms connect {url}        Connect WS/REST
   - gms send {msg}           Send raw message
@@ -787,12 +789,12 @@ if (cmd === "term enable") {
   - updlog                   Shows GMS update logs
   - users                    Show how many is connected
   - help                     Show this help`, "help-output");
-        return;
-    }
+            return;
+        }
 
-    if (cmd === "updlog") {
-        addToConsole(
-            `> Update Log:
+        if (cmd === "updlog") {
+            addToConsole(
+                `> Update Log:
     GMS 1.1
 - Added mobile support with touch-friendly interface
 - Added a buncha themes
@@ -802,94 +804,134 @@ if (cmd === "term enable") {
 - shoutout to vodder for the themes!
     GMS 1.1.1
 - added merkdawn`,
-            "misc-output"
-        );
-        return;
-    }
-
-    if (cmd === "clear") { consoleOutput.textContent = ""; return; }
-    if (cmd === "autosay") { gashAutoSay = (parts[1] === "on"); addToConsole(`> Auto-say: ${gashAutoSay ? "ON" : "OFF"}`, "command-output"); return; }
-
-    if (cmd === "theme") {
-        const themeName = parts[1];
-        if (!themeName) {
-            addToConsole(`> Current theme: ${gashCurrentTheme}`, "command-output");
-            addToConsole(`> Available themes: ${Object.keys(availableThemes).join(", ")}`, "command-output");
+                "misc-output"
+            );
             return;
         }
-        if (availableThemes[themeName]) { applyTheme(themeName); addToConsole(`> Theme changed to: ${themeName}`, "command-output"); }
-        else addToConsole(`> Error: Unknown theme '${themeName}'`, "error-output");
-        return;
-    }
 
-    if (cmd === "users") {
-        if (gashWebSocket && gashWebSocket.readyState === WebSocket.OPEN) {
-            gashWebSocket.send(JSON.stringify({ type: "users" }));
-        } else if (gashUseREST && gashRESTUrl) {
-            fetch(gashRESTUrl + "/users")
-                .then(r => r.json())
-                .then(data => addToConsole(`👥 Users online: ${data.count}`, "misc-output"))
-                .catch(err => addToConsole("❌ Failed to get users: " + err.message, "error-output"));
-        } else {
-            addToConsole("⚠️ Not connected (WebSocket or REST).", "error-output");
-        }
-        return; // stop here, don't send to chat
-    }
+        if (cmd === "clear") { consoleOutput.textContent = ""; return; }
+        if (cmd === "autosay") { gashAutoSay = (parts[1] === "on"); addToConsole(`> Auto-say: ${gashAutoSay ? "ON" : "OFF"}`, "command-output"); return; }
 
-    // GMS commands
-    if (cmd === "gms") {
-        const sub = parts[1];
-        if (sub === "connect") {
-            const url = parts[2];
-            if (!url) return addToConsole("> Error: Missing URL", "error-output");
-            if (url.startsWith("http")) {
-                gashUseREST = true;
-                gashRESTUrl = url;
-                startRESTPolling();
-                addToConsole(`> Using REST API at ${url}`, "command-output");
+        if (cmd === "theme") {
+            const themeName = parts[1];
+            if (!themeName) {
+                addToConsole(`> Current theme: ${gashCurrentTheme}`, "command-output");
+                addToConsole(`> Available themes: ${Object.keys(availableThemes).join(", ")}`, "command-output");
                 return;
             }
-            if (!url.startsWith("ws://") && !url.startsWith("wss://"))
-                return addToConsole("> Error: Invalid WebSocket URL.", "error-output");
-
-            try {
-                gashWebSocket = new WebSocket(url);
-                gashWebSocketUrl = url;
-                gashWebSocket.onopen = () => {
-                    addToConsole(`> Connected to WebSocket: ${url}`, "command-output");
-                    updateConnectionStatus(true);
-                };
-                gashWebSocket.onmessage = e => {
-                    try {
-                        const rawMsg = JSON.parse(e.data);
-                        const msg = validateMessage(rawMsg);
-                        if (msg && msg.userId !== gashUserId) {
-                            playPingSound();
-                            addToConsole(`> ${msg.user}: ${msg.msg}`, "command-output");
-                        }
-                    } catch {
-                        addToConsole(`> WS: ${sanitizeText(e.data)}`, "misc-output");
-                    }
-                };
-                gashWebSocket.onerror = () => {
-                    addToConsole("> WebSocket error. Switching to REST fallback.", "misc-urgent-output");
-                    gashWebSocket = null;
-                    gashUseREST = true;
-                    gashRESTUrl = url.replace(/^ws/, "http");
-                    startRESTPolling();
-                };
-                gashWebSocket.onclose = () => {
-                    addToConsole("> WebSocket closed.", "misc-output");
-                    gashWebSocket = null;
-                    gashWebSocketUrl = null;
-                    updateConnectionStatus(false);
-                };
-            } catch (e) { addToConsole("> Error: " + sanitizeText(e.message), "error-output"); }
+            if (availableThemes[themeName]) { applyTheme(themeName); addToConsole(`> Theme changed to: ${themeName}`, "command-output"); }
+            else addToConsole(`> Error: Unknown theme '${themeName}'`, "error-output");
             return;
         }
 
-        if (sub === "send") {
-            const msg = parts.slice(2).join(" ");
+        if (cmd === "users") {
+            if (gashWebSocket && gashWebSocket.readyState === WebSocket.OPEN) {
+                gashWebSocket.send(JSON.stringify({ type: "users" }));
+            } else if (gashUseREST && gashRESTUrl) {
+                fetch(gashRESTUrl + "/users")
+                    .then(r => r.json())
+                    .then(data => addToConsole(`👥 Users online: ${data.count}`, "misc-output"))
+                    .catch(err => addToConsole("❌ Failed to get users: " + err.message, "error-output"));
+            } else {
+                addToConsole("⚠️ Not connected (WebSocket or REST).", "error-output");
+            }
+            return; // stop here, don't send to chat
+        }
+
+        // GMS commands
+        if (cmd === "gms") {
+            const sub = parts[1];
+            if (sub === "connect") {
+                const url = parts[2];
+                if (!url) return addToConsole("> Error: Missing URL", "error-output");
+                if (url.startsWith("http")) {
+                    gashUseREST = true;
+                    gashRESTUrl = url;
+                    startRESTPolling();
+                    addToConsole(`> Using REST API at ${url}`, "command-output");
+                    return;
+                }
+                if (!url.startsWith("ws://") && !url.startsWith("wss://"))
+                    return addToConsole("> Error: Invalid WebSocket URL.", "error-output");
+
+                try {
+                    gashWebSocket = new WebSocket(url);
+                    gashWebSocketUrl = url;
+                    gashWebSocket.onopen = () => {
+                        addToConsole(`> Connected to WebSocket: ${url}`, "command-output");
+                        updateConnectionStatus(true);
+                    };
+                    gashWebSocket.onmessage = e => {
+                        try {
+                            const rawMsg = JSON.parse(e.data);
+                            const msg = validateMessage(rawMsg);
+                            if (msg && msg.userId !== gashUserId) {
+                                playPingSound();
+                                addToConsole(`> ${msg.user}: ${msg.msg}`, "command-output");
+                            }
+                        } catch {
+                            addToConsole(`> WS: ${sanitizeText(e.data)}`, "misc-output");
+                        }
+                    };
+                    gashWebSocket.onerror = () => {
+                        addToConsole("> WebSocket error. Switching to REST fallback.", "misc-urgent-output");
+                        gashWebSocket = null;
+                        gashUseREST = true;
+                        gashRESTUrl = url.replace(/^ws/, "http");
+                        startRESTPolling();
+                    };
+                    gashWebSocket.onclose = () => {
+                        addToConsole("> WebSocket closed.", "misc-output");
+                        gashWebSocket = null;
+                        gashWebSocketUrl = null;
+                        updateConnectionStatus(false);
+                    };
+                } catch (e) { addToConsole("> Error: " + sanitizeText(e.message), "error-output"); }
+                return;
+            }
+
+            if (sub === "send") {
+                const msg = parts.slice(2).join(" ");
+                if (!msg) return addToConsole("> Error: No message", "error-output");
+                const sanitizedMsg = sanitizeText(msg);
+                if (gashUseREST) {
+                    restSendMessage(sanitizedMsg);
+                    addToConsole(`> [ME] ${gashNickname}: ${sanitizedMsg}`, "command-output");
+                } else if (gashWebSocket && gashWebSocket.readyState === WebSocket.OPEN) {
+                    gashWebSocket.send(JSON.stringify({ user: gashNickname, msg: sanitizedMsg, userId: gashUserId }));
+                    addToConsole(`> [ME] ${gashNickname}: ${sanitizedMsg}`, "command-output");
+                } else addToConsole("> Error: Not connected.", "error-output");
+                return;
+            }
+
+            if (sub === "disconnect") {
+                if (gashWebSocket) {
+                    gashWebSocket.close();
+                    addToConsole("> Closing WebSocket...", "misc-output");
+                }
+                if (gashUseREST && gashRESTPoller) {
+                    clearInterval(gashRESTPoller);
+                    addToConsole("> Stopped REST polling.", "misc-output");
+                    gashUseREST = false;
+                }
+                updateConnectionStatus(false);
+                return;
+            }
+
+            if (sub === "check") {
+                if (gashUseREST) addToConsole(`> Using REST at ${gashRESTUrl}`, "command-output");
+                else if (gashWebSocket && gashWebSocket.readyState === WebSocket.OPEN) addToConsole(`> Connected to WS: ${gashWebSocketUrl}`, "command-output");
+                else addToConsole("> No active connection.", "misc-output");
+                return;
+            }
+
+            addToConsole("> Usage: gms {connect|send|disconnect|check}", "error-output");
+            return;
+        }
+
+        // SAY command
+        if (cmd === "say") {
+            const msg = parts.slice(1).join(" ");
             if (!msg) return addToConsole("> Error: No message", "error-output");
             const sanitizedMsg = sanitizeText(msg);
             if (gashUseREST) {
@@ -902,176 +944,136 @@ if (cmd === "term enable") {
             return;
         }
 
-        if (sub === "disconnect") {
-            if (gashWebSocket) {
-                gashWebSocket.close();
-                addToConsole("> Closing WebSocket...", "misc-output");
-            }
-            if (gashUseREST && gashRESTPoller) {
-                clearInterval(gashRESTPoller);
-                addToConsole("> Stopped REST polling.", "misc-output");
-                gashUseREST = false;
-            }
-            updateConnectionStatus(false);
-            return;
-        }
-
-        if (sub === "check") {
-            if (gashUseREST) addToConsole(`> Using REST at ${gashRESTUrl}`, "command-output");
-            else if (gashWebSocket && gashWebSocket.readyState === WebSocket.OPEN) addToConsole(`> Connected to WS: ${gashWebSocketUrl}`, "command-output");
-            else addToConsole("> No active connection.", "misc-output");
-            return;
-        }
-
-        addToConsole("> Usage: gms {connect|send|disconnect|check}", "error-output");
-        return;
+        addToConsole("> Unknown command", "error-output");
     }
 
-    // SAY command
-    if (cmd === "say") {
-        const msg = parts.slice(1).join(" ");
-        if (!msg) return addToConsole("> Error: No message", "error-output");
-        const sanitizedMsg = sanitizeText(msg);
-        if (gashUseREST) {
-            restSendMessage(sanitizedMsg);
-            addToConsole(`> [ME] ${gashNickname}: ${sanitizedMsg}`, "command-output");
-        } else if (gashWebSocket && gashWebSocket.readyState === WebSocket.OPEN) {
-            gashWebSocket.send(JSON.stringify({ user: gashNickname, msg: sanitizedMsg, userId: gashUserId }));
-            addToConsole(`> [ME] ${gashNickname}: ${sanitizedMsg}`, "command-output");
-        } else addToConsole("> Error: Not connected.", "error-output");
-        return;
+    function processMarkdown(text) {
+        // Code blocks (```code```)
+        text = text.replace(/```([\s\S]*?)```/g, (_, code) => `<pre><code>${code}</code></pre>`);
+
+        // Inline code (`code`)
+        text = text.replace(/`([^`]+)`/g, (_, code) => `<code>${code}</code>`);
+
+        // Bold (**bold** or __bold__)
+        text = text.replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
+
+        // Italic (*italic* or _italic_)
+        text = text.replace(/(?<!\*)\*(?!\*)(.*?)\*(?!\*)/g, "<i>$1</i>");
+        text = text.replace(/(?<!_)_(?!_)(.*?)_(?!_)/g, "<i>$1</i>");
+
+        // Strikethrough (~~text~~)
+        text = text.replace(/~~(.*?)~~/g, "<s>$1</s>");
+
+        // Underline (__underline__)
+        text = text.replace(/__(.*?)__/g, "<u>$1</u>");
+
+        // Spoilers (||spoiler||)
+        text = text.replace(/\|\|(.*?)\|\|/g, "<span class='spoiler'>$1</span>");
+
+        // Links ([text](url))
+        text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s]+)\)/g, `<a href="$2" target="_blank">$1</a>`);
+        return text;
     }
 
-    addToConsole("> Unknown command", "error-output");
-}
-
-function processMarkdown(text) {
-  // Code blocks (```code```)
-  text = text.replace(/```([\s\S]*?)```/g, (_, code) => `<pre><code>${code}</code></pre>`);
-
-  // Inline code (`code`)
-  text = text.replace(/`([^`]+)`/g, (_, code) => `<code>${code}</code>`);
-
-  // Bold (**bold** or __bold__)
-  text = text.replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
-
-  // Italic (*italic* or _italic_)
-  text = text.replace(/(?<!\*)\*(?!\*)(.*?)\*(?!\*)/g, "<i>$1</i>");
-  text = text.replace(/(?<!_)_(?!_)(.*?)_(?!_)/g, "<i>$1</i>");
-
-  // Strikethrough (~~text~~)
-  text = text.replace(/~~(.*?)~~/g, "<s>$1</s>");
-
-  // Underline (__underline__)
-  text = text.replace(/__(.*?)__/g, "<u>$1</u>");
-
-  // Spoilers (||spoiler||)
-  text = text.replace(/\|\|(.*?)\|\|/g, "<span class='spoiler'>$1</span>");
-
-  // Links ([text](url))
-  text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s]+)\)/g, `<a href="$2" target="_blank">$1</a>`);
-  return text;
-}
-
-function decodeHTMLEntities(str) {
-    const txt = document.createElement("textarea");
-    txt.innerHTML = str;
-    return txt.value;
-}
-
-
-// heh. stuff
-
-function addToConsole(text, cssClass = "command-output") {
-    const div = document.createElement("div");
-    div.className = cssClass;
-
-    // 1️⃣ Process emojis first
-    let processedText = processEmojis(text);
-
-    // 2️⃣ Convert markdown to HTML (adds <img>, <b>, <i>, <a>, etc.)
-    processedText = processMarkdown(processedText);
-
-    // 3️⃣ Sanitize HTML (keeps allowed tags, blocks XSS)
-    processedText = sanitizeText(processedText);
-
-    // 4️⃣ Render safely as HTML
-    div.innerHTML = processedText;
-
-    consoleOutput.appendChild(div);
-    consoleOutput.scrollTop = consoleOutput.scrollHeight;
-}
-
-
-// Handle page visibility changes to manage audio context
-document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && audioContext && audioContext.state === 'suspended') {
-        audioContext.resume();
+    function decodeHTMLEntities(str) {
+        const txt = document.createElement("textarea");
+        txt.innerHTML = str;
+        return txt.value;
     }
-});
 
-// Touch event handling for mobile
-if (isMobile) {
-    // Prevent default touch behaviors that might interfere
-    document.addEventListener('touchstart', (e) => {
-        // Allow normal touch on input elements
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') {
-            return;
+
+    // heh. stuff
+
+    function addToConsole(text, cssClass = "command-output") {
+        const div = document.createElement("div");
+        div.className = cssClass;
+
+        // 1️⃣ Process emojis first
+        let processedText = processEmojis(text);
+
+        // 2️⃣ Convert markdown to HTML (adds <img>, <b>, <i>, <a>, etc.)
+        processedText = processMarkdown(processedText);
+
+        // 3️⃣ Sanitize HTML (keeps allowed tags, blocks XSS)
+        processedText = sanitizeText(processedText);
+
+        // 4️⃣ Render safely as HTML
+        div.innerHTML = processedText;
+
+        consoleOutput.appendChild(div);
+        consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    }
+
+
+    // Handle page visibility changes to manage audio context
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && audioContext && audioContext.state === 'suspended') {
+            audioContext.resume();
         }
     });
 
-    // Handle mobile scrolling
-    let touchStartY = 0;
-    consoleOutput.addEventListener('touchstart', (e) => {
-        touchStartY = e.touches[0].clientY;
-    });
-
-    consoleOutput.addEventListener('touchmove', (e) => {
-        e.preventDefault(); // Prevent body scroll
-        const touchY = e.touches[0].clientY;
-        const deltaY = touchStartY - touchY;
-        consoleOutput.scrollTop += deltaY;
-        touchStartY = touchY;
-    });
-}
-
-// Init
-function initGMS() {
-    renderInput();
-
-    // Load saved theme
-    let savedTheme = "default";
-    try {
-        savedTheme = localStorage.getItem("gmsTheme") || "default";
-    } catch (e) {
-        console.log("LocalStorage not available, using default theme");
-    }
-
-    applyTheme(savedTheme);
-
-    // Load saved nickname
-    try {
-        gashNickname = localStorage.getItem("gmsNickname") || gashNickname;
-    } catch (e) {
-        console.log("LocalStorage not available, using default nickname");
-    }
-
-    addToConsole(`> Loaded Nickname: ${gashNickname}`, "misc-output");
-
-
-    // Setup mobile input if on mobile device
+    // Touch event handling for mobile
     if (isMobile) {
-        setupMobileInput();
-        addToConsole("> 📱 Mobile interface enabled", "misc-output");
+        // Prevent default touch behaviors that might interfere
+        document.addEventListener('touchstart', (e) => {
+            // Allow normal touch on input elements
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') {
+                return;
+            }
+        });
+
+        // Handle mobile scrolling
+        let touchStartY = 0;
+        consoleOutput.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+        });
+
+        consoleOutput.addEventListener('touchmove', (e) => {
+            e.preventDefault(); // Prevent body scroll
+            const touchY = e.touches[0].clientY;
+            const deltaY = touchStartY - touchY;
+            consoleOutput.scrollTop += deltaY;
+            touchStartY = touchY;
+        });
     }
 
-    // Initialize connection status
-    updateConnectionStatus(false);
+    // Init
+    function initGMS() {
+        renderInput();
 
-}
+        // Load saved theme
+        let savedTheme = "default";
+        try {
+            savedTheme = localStorage.getItem("gmsTheme") || "default";
+        } catch (e) {
+            console.log("LocalStorage not available, using default theme");
+        }
 
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initGMS);
-} else {
-    initGMS();
-}
+        applyTheme(savedTheme);
+
+        // Load saved nickname
+        try {
+            gashNickname = localStorage.getItem("gmsNickname") || gashNickname;
+        } catch (e) {
+            console.log("LocalStorage not available, using default nickname");
+        }
+
+        addToConsole(`> Loaded Nickname: ${gashNickname}`, "misc-output");
+
+
+        // Setup mobile input if on mobile device
+        if (isMobile) {
+            setupMobileInput();
+            addToConsole("> 📱 Mobile interface enabled", "misc-output");
+        }
+
+        // Initialize connection status
+        updateConnectionStatus(false);
+
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initGMS);
+    } else {
+        initGMS();
+    }
