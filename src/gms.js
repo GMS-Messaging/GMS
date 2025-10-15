@@ -519,6 +519,11 @@ function sendMobileMessage() {
     }
 }
 
+document.addEventListener("keydown", async event => {
+    alert("keydown:", event.key); // <- see if Enter is logged)
+});
+
+
 // Enhanced key handling (desktop)
 document.addEventListener("keydown", async event => {
     // Initialize audio on first keypress
