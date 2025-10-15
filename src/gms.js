@@ -46,7 +46,7 @@ function playPingSound() {
     if (!gashPingSoundEnabled || !audioContext) return;
 
     try {
-        const oscillator = audioContext.createOscillator();
+        const oscillator = audioContext.createOscillator();f
         const gainNode = audioContext.createGain();
 
         oscillator.connect(gainNode);
@@ -519,11 +519,6 @@ function sendMobileMessage() {
     }
 }
 
-document.addEventListener("keydown", async event => {
-    alert("keydown:", event.key); // <- see if Enter is logged)
-});
-
-
 // Enhanced key handling (desktop)
 document.addEventListener("keydown", async event => {
     // Initialize audio on first keypress
@@ -567,41 +562,40 @@ document.addEventListener("keydown", async event => {
     renderInput();
 
     if (event.key === "Enter") {
-        event.preventDefault();  // STOP the browser from doing its thing
-        const trimmed = currentInput.trim();
-        if (!trimmed) { 
-            currentInput = ""; 
-            cursorIndex = 0; 
-            renderInput(); 
-            return; 
-        }
-
-        commandHistory.push(trimmed);
-        historyIndex = commandHistory.length;
-
-        const cmdName = trimmed.split(" ")[0].toLowerCase();
-
-        // Convert :shortcodes: → Unicode emojis immediately
-        let localMsg = trimmed;
-        if (typeof emojione !== "undefined") {
-            localMsg = emojione.shortnameToUnicode(trimmed);
-        }
-
-        // Display instantly
-        addToConsole(`[${gashNickname}]: ${localMsg}`);
-
-        // Send to server
-        if (gashAutoSay && !nonChatCommands.includes(cmdName)) {
-            processCommand("say " + trimmed);
-        } else {
-            processCommand(trimmed);
-        }
-
-        currentInput = "";
-        cursorIndex = 0;
-        renderInput();
-        return;
+    const trimmed = currentInput.trim();
+    if (!trimmed) { 
+        currentInput = ""; 
+        cursorIndex = 0; 
+        renderInput(); 
+        return; 
     }
+
+    commandHistory.push(trimmed);
+    historyIndex = commandHistory.length;
+
+    const nonChatCommands = ["join", "nick", "echo", "help", "clear", "autosay", "say", "theme", "gms", "uid", "updlog", "ping", "users", "upload"];
+    const cmdName = trimmed.split(" ")[0].toLowerCase();
+
+    // Convert shortcodes → Unicode emojis immediately
+    let localMsg = trimmed;
+    if (typeof emojione !== "undefined") {
+        localMsg = emojione.shortnameToUnicode(trimmed);
+    }
+
+    // Display instantly on client
+    addToConsole(`[${gashNickname}]: ${localMsg}`);
+
+    if (gashAutoSay && !nonChatCommands.includes(cmdName)) {
+        processCommand("say " + trimmed);
+    } else {
+        processCommand(trimmed);
+    }
+
+    currentInput = ""; 
+    cursorIndex = 0; 
+    renderInput();
+}
+
 
 });
 
