@@ -113,6 +113,14 @@ body {
   }
 }
 
+.emoji {
+  width: 16px;      /* or 14px if you want really small */
+  height: 16px;
+  vertical-align: text-bottom; /* aligns emoji nicely with text */
+  display: inline-block;
+}
+
+
 .command-output {
   color: white;
 }
@@ -248,6 +256,7 @@ textarea:focus {
   background-color: #00FF00;
   color: black;
 }
+
 
 
 
