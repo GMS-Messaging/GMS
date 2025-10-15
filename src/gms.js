@@ -201,7 +201,7 @@ case 'classic':
     .misc-urgent-output { color: #f55 !important; opacity:75%; }
     #input-text, #caret { color: #0F0 !important; }
     #prompt { background:#000; color:#0F0; padding:4px; border-top:1px solid #333; }
-    body { font-family: "Courier New", monospace; }
+    body { font-family: "Courier New", monospace; color: #fff }
   `;
   break;
 
