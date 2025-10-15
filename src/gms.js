@@ -97,16 +97,24 @@ function sanitizeText(str) {
     });
 }
 
-// Process emojis with Twemoji
+// Process both :shortcodes: → emoji → Twemoji <img>
 function processEmojis(text) {
+    // 1️⃣ Convert :shortcodes: → Unicode emojis using emoji-toolkit
+    if (typeof emojione !== 'undefined') {
+        text = emojione.shortnameToUnicode(text);
+    }
+
+    // 2️⃣ Convert Unicode emojis → Twemoji <img> tags for consistent display
     if (typeof twemoji !== 'undefined') {
-        return twemoji.parse(text, {
-            size: '16x16',
-            ext: '.png'
+        text = twemoji.parse(text, {
+            folder: 'svg', // or '72x72' if you prefer PNGs
+            ext: '.svg'
         });
     }
+
     return text;
 }
+
 
 // Validate message object from server
 function validateMessage(msg) {
