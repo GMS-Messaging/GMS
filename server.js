@@ -6,6 +6,7 @@ const cors = require("cors");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const emoji = require("node-emoji");
 
 console.log("hello from o-o-o ohio!");
 
@@ -69,27 +70,40 @@ wss.on("connection", (ws) => {
   ws.send(JSON.stringify({ system: true, msg: "✅ Connected to GMS WebSocket" }));
   messages.forEach(m => ws.send(JSON.stringify(m)));
 
-  ws.on("message", (data) => {
-    try {
-      const msg = JSON.parse(data.toString());
+ws.on("message", (data) => {
+  try {
+    const msg = JSON.parse(data.toString());
 
-      if (msg.type === "users") {
-        ws.send(JSON.stringify({ type: "users", count: activeUsers.size }));
-        return;
-      }
-
-      if (msg.user && msg.msg) console.log(`💬 [${msg.user}]: ${msg.msg}`);
-      else console.log("📩 Raw:", msg);
-
-      messages.push(msg);
-
-      wss.clients.forEach(client => {
-        if (client.readyState === ws.OPEN) client.send(JSON.stringify(msg));
-      });
-    } catch (err) {
-      console.error("❌ Invalid message:", err);
+    if (msg.type === "users") {
+      ws.send(JSON.stringify({ type: "users", count: activeUsers.size }));
+      return;
     }
-  });
+
+    // --- 🟡 Convert emoji shortcodes before broadcasting ---
+    if (msg.msg && typeof msg.msg === "string") {
+      msg.msg = emoji.emojify(msg.msg); // e.g. ":wave:" → 👋
+    }
+
+    // Optional: add alias for your custom emoji
+    // emoji.addAlias("gms", "💬");
+
+    // Log for server visibility
+    if (msg.user && msg.msg) console.log(`💬 [${msg.user}]: ${msg.msg}`);
+    else console.log("📩 Raw:", msg);
+
+    messages.push(msg);
+
+    // Broadcast to all clients
+    wss.clients.forEach((client) => {
+      if (client.readyState === ws.OPEN) {
+        client.send(JSON.stringify(msg));
+      }
+    });
+  } catch (err) {
+    console.error("❌ Invalid message:", err);
+  }
+});
+
 
   ws.on("close", () => {
     activeUsers.delete(wsId);
@@ -99,23 +113,34 @@ wss.on("connection", (ws) => {
 
 // ---- REST endpoints ----
 
-// Send chat message
+const emoji = require("node-emoji"); // make sure it's imported once at top
+
+// Optional: define custom emoji aliases
+// emoji.addAlias("gms", "💬");
+// emoji.addAlias("galaxy", "🌌");
+
 app.post("/send", (req, res) => {
   const { user, msg, userId } = req.body;
   if (!user || !msg) return res.status(400).json({ error: "Missing user or msg" });
 
-  const newMsg = { user, msg, userId };  // ✅ keep sender id
+  // 🟡 Convert emoji shortcodes like ":wave:" → "👋"
+  const emojifiedMsg = emoji.emojify(msg);
+
+  const newMsg = { user, msg: emojifiedMsg, userId }; // ✅ keep sender id
   messages.push(newMsg);
 
   activeUsers.add(userId || user); // track unique identifier
 
-  wss.clients.forEach(client => {
+  // Broadcast to all connected WebSocket clients
+  wss.clients.forEach((client) => {
     if (client.readyState === 1) client.send(JSON.stringify(newMsg));
   });
 
   res.json({ success: true });
-  console.log(`💬[REST] [${user}]: ${msg}`);
+
+  console.log(`💬[REST] [${user}]: ${emojifiedMsg}`);
 });
+
 
 
 // Get all messages
