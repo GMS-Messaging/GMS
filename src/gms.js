@@ -896,22 +896,19 @@ function processCommand(command) {
             const msg = parts.slice(2).join(" ");
             if (!msg) return addToConsole("> Error: No message", "error-output");
 
-            // Sanitize first
-            let sanitizedMsg = sanitizeText(msg);
-
-            // Parse shortcodes → emojis
+            // Don't sanitize the original - let addToConsole handle display
+            let sendMsg = msg;
             if (typeof emojione !== "undefined") {
-                sanitizedMsg = emojione.shortnameToUnicode(sanitizedMsg);
-            } else {
-                sanitizedMsg = processEmojis(sanitizedMsg);
+                sendMsg = emojione.shortnameToUnicode(msg);
             }
 
             if (gashUseREST) {
-                restSendMessage(sanitizedMsg);
-                addToConsole(`> [ME] ${gashNickname}: ${sanitizedMsg}`, "command-output");
+                restSendMessage(sendMsg);
+                // Pass original msg so addToConsole can process it properly
+                addToConsole(`> [ME] ${gashNickname}: ${msg}`, "command-output");
             } else if (gashWebSocket && gashWebSocket.readyState === WebSocket.OPEN) {
-                gashWebSocket.send(JSON.stringify({ user: gashNickname, msg: sanitizedMsg, userId: gashUserId }));
-                addToConsole(`> [ME] ${gashNickname}: ${sanitizedMsg}`, "command-output");
+                gashWebSocket.send(JSON.stringify({ user: gashNickname, msg: sendMsg, userId: gashUserId }));
+                addToConsole(`> [ME] ${gashNickname}: ${msg}`, "command-output");
             } else {
                 addToConsole("> Error: Not connected.", "error-output");
             }
@@ -960,11 +957,12 @@ function processCommand(command) {
         }
 
         if (gashUseREST) {
-            restSendMessage(sanitizedMsg);
-            addToConsole(`> [ME] ${gashNickname}: ${sanitizedMsg}`, "command-output");
+            restSendMessage(sendMsg);
+            // Pass original msg so addToConsole can process it properly
+            addToConsole(`> [ME] ${gashNickname}: ${msg}`, "command-output");
         } else if (gashWebSocket && gashWebSocket.readyState === WebSocket.OPEN) {
-            gashWebSocket.send(JSON.stringify({ user: gashNickname, msg: sanitizedMsg, userId: gashUserId }));
-            addToConsole(`> [ME] ${gashNickname}: ${sanitizedMsg}`, "command-output");
+            gashWebSocket.send(JSON.stringify({ user: gashNickname, msg: sendMsg, userId: gashUserId }));
+            addToConsole(`> [ME] ${gashNickname}: ${msg}`, "command-output");
         } else {
             addToConsole("> Error: Not connected.", "error-output");
         }
@@ -982,12 +980,11 @@ function processMarkdown(text) {
     // Inline code (`code`)
     text = text.replace(/`([^`]+)`/g, (_, code) => `<code>${code}</code>`);
 
-    // Bold (**bold** or __bold__)
+    // Bold (**bold**)
     text = text.replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
 
     // Italic (*italic* or _italic_)
     text = text.replace(/(?<!\*)\*(?!\*)(.*?)\*(?!\*)/g, "<i>$1</i>");
-    text = text.replace(/(?<!_)_(?!_)(.*?)_(?!_)/g, "<i>$1</i>");
 
     // Strikethrough (~~text~~)
     text = text.replace(/~~(.*?)~~/g, "<s>$1</s>");
