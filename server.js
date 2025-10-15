@@ -113,8 +113,6 @@ ws.on("message", (data) => {
 
 // ---- REST endpoints ----
 
-const emoji = require("node-emoji"); // make sure it's imported once at top
-
 // Optional: define custom emoji aliases
 // emoji.addAlias("gms", "💬");
 // emoji.addAlias("galaxy", "🌌");
