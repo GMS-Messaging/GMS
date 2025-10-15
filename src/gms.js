@@ -961,8 +961,6 @@ function processCommand(command) {
 
 
     addToConsole("> Unknown command", "error-output");
-}
-
 function processMarkdown(text) {
     // Code blocks (```code```)
     text = text.replace(/```([\s\S]*?)```/g, (_, code) => `<pre><code>${code}</code></pre>`);
