@@ -10,17 +10,39 @@ const emoji = require("node-emoji");
 
 // ---- Custom emoji aliases ----
 
-// 🟡 Add missing or custom emoji aliases manually
+// 🟡 Add missing / custom emoji aliases manually (universal-safe)
 const customEmojis = {
-  // 🥹 Face Holding Back Tears
   face_holding_back_tears: "🥹",
   holding_back_tears: "🥹",
   watery_eyes: "🥹",
-
-  // 🥀 Wilted Flower
-  wilted_rose: "🥀",
+  wilted_flower: "🥀",
   aww_hell_nah_twin: "🥀",
+  gms: "💬",
+  galaxy: "🌌"
 };
+
+// Find the internal emoji map — it changed in newer versions
+const emojiData = emoji.hasOwnProperty("emoji") ? emoji.emoji
+                : emoji.hasOwnProperty("emojis") ? emoji.emojis
+                : null;
+
+// Merge safely
+if (emojiData && typeof emojiData === "object") {
+  Object.assign(emojiData, customEmojis);
+  console.log("✅ Custom emojis added!");
+} else {
+  console.warn("⚠️ Could not find internal emoji map, using fallback patch.");
+
+  // fallback: wrap emojify() to inject our aliases manually
+  const originalEmojify = emoji.emojify;
+  emoji.emojify = (str) => {
+    for (const [key, value] of Object.entries(customEmojis)) {
+      str = str.replaceAll(`:${key}:`, value);
+    }
+    return originalEmojify ? originalEmojify(str) : str;
+  };
+}
+
 
 // Merge with node-emoji’s built-in set
 Object.assign(emoji.emoji, customEmojis);
