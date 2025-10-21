@@ -8,6 +8,19 @@ const path = require("path");
 const fs = require("fs");
 const emoji = require("node-emoji");
 
+// ---- Custom emoji aliases ----
+
+// 🥹 Face Holding Back Tears (not included by default)
+emoji.addAlias("face_holding_back_tears", "🥹");
+emoji.addAlias("holding_back_tears", "🥹");
+emoji.addAlias("watery_eyes", "🥹"); // if you want that to work too
+
+// 🥀 Wilted Rose(Wilted Flower)
+emoji.addAlias("wilted_flower","🥀")
+emoji.addAlias("aww_hell_nah_twin","🥀")
+
+
+
 console.log("hello from o-o-o ohio!");
 
 // Try to load node-cron
