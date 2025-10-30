@@ -46,7 +46,7 @@ function playPingSound() {
     if (!gashPingSoundEnabled || !audioContext) return;
 
     try {
-        const oscillator = audioContext.createOscillator(); f
+        const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
 
         oscillator.connect(gainNode);
