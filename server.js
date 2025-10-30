@@ -11,6 +11,7 @@ const emoji = require("node-emoji");
 // ---- Custom emoji aliases ----
 
 // 🟡 Add missing / custom emoji aliases manually (universal-safe)
+// ---- Custom emoji aliases ----
 const customEmojis = {
   face_holding_back_tears: "🥹",
   holding_back_tears: "🥹",
@@ -21,12 +22,11 @@ const customEmojis = {
   galaxy: "🌌"
 };
 
-// Find the internal emoji map — it changed in newer versions
-const emojiData = emoji.hasOwnProperty("emoji") ? emoji.emoji
-                : emoji.hasOwnProperty("emojis") ? emoji.emojis
-                : null;
+const emojiData =
+  emoji.hasOwnProperty("emoji") ? emoji.emoji :
+  emoji.hasOwnProperty("emojis") ? emoji.emojis :
+  null;
 
-// Merge safely
 if (emojiData && typeof emojiData === "object") {
   Object.assign(emojiData, customEmojis);
   console.log("✅ Custom emojis added!");
@@ -42,13 +42,6 @@ if (emojiData && typeof emojiData === "object") {
     return originalEmojify ? originalEmojify(str) : str;
   };
 }
-
-
-// Merge with node-emoji’s built-in set
-Object.assign(emoji.emoji, customEmojis);
-
-
-
 
 console.log("hello from o-o-o ohio!");
 
