@@ -96,6 +96,11 @@ function generateUserId() {
   return Math.random().toString(36).substring(2, 10);
 }
 
+// Ping endpoint for health checks
+app.get("/ping", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
 // ---- WebSocket handling ----
 wss.on("connection", (ws) => {
   const wsId = generateUserId();
